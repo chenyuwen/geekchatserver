@@ -1,3 +1,5 @@
 server
 client
 cscope.out
+*.o
+*.a
