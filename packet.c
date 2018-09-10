@@ -15,15 +15,11 @@
 #include "server_configs.h"
 #include "packet.h"
 #include "server.h"
+#include "methods.h"
 
 #ifndef ARRAY_SIZE
 #define ARRAY_SIZE(array) (sizeof(array) / sizeof(array[0]))
 #endif
-
-struct method {
-	char *method_name;
-	int (*method_handler)(struct server *, struct client *, json_t *);
-};
 
 int json_to_raw_packet(struct raw_packet *packet, json_t *json, int type)
 {
@@ -31,39 +27,11 @@ int json_to_raw_packet(struct raw_packet *packet, json_t *json, int type)
 	struct crc32_raw_packet *crc32_packet = (struct crc32_raw_packet *)packet;
 
 	packet->head.type = type;
-	packet->head.packet_len = json_dumpb(json, packet->buffer, 100, 0);
+	packet->head.packet_len = json_dumpb(json, packet->buffer, RAW_PACKET_BUFFER_MAX, 0);
 	crc32 = crc32_classic(&crc32_packet->crcdata, packet->head.packet_len);
 	packet->head.crc32 = htonl(crc32);
 	return 0;
 }
-
-int method_hello_handler(struct server *sv, struct client *ct, json_t *json)
-{
-	json_error_t json_err;
-	json_t *rjson = json_object();
-	struct raw_packet *packet = (void *)ct->respond;
-
-	json = json_object();
-	json_object_set_new(rjson, "method", json_string("com.hello.respond"));
-	json_object_set_new(rjson, "status", json_true());
-	json_to_raw_packet(packet, rjson, PACKET_TYPE_UNENCRY);
-
-	write(ct->fd, (void *)packet, sizeof(struct raw_packet_head) + packet->head.packet_len);
-
-	/*TODO: free json*/
-	printf("hello\n");
-	return 0;
-}
-
-struct method methods[] = {
-	{
-		"com.hello.request",
-		method_hello_handler,
-	},
-
-	{
-	},
-};
 
 int call_method(struct server *sv, struct client *ct, json_t *json, const char *method)
 {
@@ -98,6 +66,7 @@ int dispose_packet(struct server *sv, struct client *ct, struct raw_packet *pack
 		return -1;
 	}
 	call_method(sv, ct, json, tmp);
+	json_delete(json);
 	return 0;
 }
 

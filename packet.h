@@ -36,7 +36,20 @@ struct crc32_raw_packet {
 };
 #pragma pack ()
 
+struct method {
+	char *method_name;
+	int (*method_handler)(struct server *, struct client *, json_t *);
+};
+
+#define RAW_PACKET_BUFFER_MAX (SERVER_MAX_PACKETS - sizeof(struct raw_packet_head))
+
+static inline int sizeof_raw_packet(struct raw_packet *packet)
+{
+	return sizeof(struct raw_packet_head) + packet->head.packet_len;
+}
+
 int dispose_packet(struct server *sv, struct client *ct, struct raw_packet *packet);
+int json_to_raw_packet(struct raw_packet *packet, json_t *json, int type);
 
 #endif /*__PACKET_H__*/
 

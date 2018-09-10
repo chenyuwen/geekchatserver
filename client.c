@@ -48,7 +48,7 @@ int main(int argc, char **argv)
 	unsigned char buffer[512];
 	struct raw_packet *packet = (void *)buffer;
 	struct crc32_raw_packet *crc32_packet = (struct crc32_raw_packet *)buffer;
-	json_t *json, *item;
+	json_t *json;
 
 	if(argc >= 2) {
 		port = atoi(argv[1]);
@@ -75,7 +75,6 @@ int main(int argc, char **argv)
 	packet->head.packet_len = 100;
 	packet->head.type = PACKET_TYPE_UNENCRY;
 	memset(packet->buffer, 0, 100);
-	item = json_object();
 	json = json_object();
 	json_object_set_new(json, "method", json_string("com.hello.request"));
 	packet->head.packet_len = json_dumpb(json, packet->buffer, 100, 0);
@@ -89,6 +88,7 @@ int main(int argc, char **argv)
 	printf("json:%s\n", packet->buffer);
 	printf("close\n");
 	close(serverfd);
+	json_delete(json);
 
 	return 0;
 }
