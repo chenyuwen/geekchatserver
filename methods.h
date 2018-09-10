@@ -7,12 +7,22 @@
 #define ARRAY_SIZE(array) (sizeof(array) / sizeof(array[0]))
 #endif
 
-extern int method_hello_handler(struct server *sv, struct client *ct, json_t *json);
+extern int method_com_hello_request(struct server *sv, struct client *ct, json_t *json);
+extern int method_com_login_seed_request(struct server *sv, struct client *ct, json_t *json);
+extern int method_com_login_request(struct server *sv, struct client *ct, json_t *json);
 
 static struct method methods[] = {
 	{
 		"com.hello.request",
-		method_hello_handler,
+		method_com_hello_request,
+	},
+	{
+		"com.login.seed.request",
+		method_com_login_seed_request,
+	},
+	{
+		"com.login.request",
+		method_com_login_request,
 	},
 };
 

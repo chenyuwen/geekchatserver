@@ -1,12 +1,12 @@
 all: server client
 
-server: server.o packet.o libjansson.a libcrc32.a libhashmap.a libhello.a
+server: server.o packet.o libjansson.a libcrc32.a libhashmap.a libmethods.a
 	gcc $(filter %.o, $^) -L./ $(patsubst lib%.a,-l%, $(filter %.a,$^)) -o server
 
 client: libjansson.a libcrc32.a libhashmap.a client.o
 	gcc $(filter %.o, $^) -L./ $(patsubst lib%.a,-l%, $(filter %.a,$^)) -o client
 
-libhello.a: com.hello.request.o
+libmethods.a: com.hello.request.o com.login.seed.request.o com.login.request.o
 	ar -r $@ $^
 
 libcrc32.a: ./crc32/crc32.o
