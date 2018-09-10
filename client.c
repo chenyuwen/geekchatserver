@@ -21,12 +21,28 @@ struct client {
 	char *token;
 };
 
+int dump_buffer(const unsigned char *buffer, int len)
+{
+	int i = 0;
+	for(i=0; i<len; i++) {
+		if(buffer[i] <= 0xF) {
+			printf("0x0%X ", buffer[i]);
+		} else {
+			printf("0x%X ", buffer[i]);
+		}
+		if((i % 20) == 19) {
+			printf("\n");
+		}
+	}
+	return 0;
+}
+
 int main(int argc, char **argv)
 {
 	int serverfd, clientfd, ret, port = SERVER_DEFAULT_PORT;
 	uint32_t crc32 = 0;
 	struct sockaddr_in serveraddr, clientaddr;
-	char buffer[512];
+	unsigned char buffer[512];
 	struct raw_packet *packet = (void *)buffer;
 	struct crc32_raw_packet *crc32_packet = (struct crc32_raw_packet *)buffer;
 
@@ -57,10 +73,21 @@ int main(int argc, char **argv)
 	memset(packet->buffer, '1', 99);
 	crc32 = crc32_classic(&crc32_packet->crcdata, packet->head.packet_len);
 	packet->head.crc32 = htonl(crc32);
+	memcpy(buffer + 108, buffer, 108);
 	ret = write(serverfd, buffer, 100);
-	sleep(2);
 	ret = write(serverfd, buffer + 100, sizeof(struct raw_packet_head));
-	sleep(2);
+	ret = write(serverfd, buffer, 108);
+	ret = write(serverfd, buffer, 108);
+	ret = write(serverfd, buffer, 108);
+	ret = write(serverfd, buffer, 108);
+	printf("write 2\n");
+	dump_buffer(buffer, 108 * 2);
+	ret = write(serverfd, buffer, 108 * 2);
+	printf("write 2 - 100\n");
+	ret = write(serverfd, buffer, 108 * 2 - 100);
+	ret = write(serverfd, buffer + 108 * 2 - 100, 100);
+	/**/
+	ret = write(serverfd, buffer, 108);
 	printf("close\n");
 	close(serverfd);
 

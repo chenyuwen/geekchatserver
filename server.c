@@ -109,7 +109,7 @@ int free_client_socket(struct server *sv, struct client *ct)
 
 int try_make_net_packet(struct server *sv, struct client *ct)
 {
-	int i = 0;
+	int i = 0, packet_size = 0;
 	uint32_t crc32 = 0;
 	struct raw_packet *packet = (struct raw_packet *)ct->buffer;
 	struct crc32_raw_packet *crc32_packet = (struct crc32_raw_packet *)ct->buffer;
@@ -119,7 +119,8 @@ int try_make_net_packet(struct server *sv, struct client *ct)
 		return 0;
 	}
 
-	if(ct->buffer_offset < packet->head.packet_len + sizeof(struct raw_packet_head)) {
+	packet_size = packet->head.packet_len + sizeof(struct raw_packet_head);
+	if(ct->buffer_offset < packet_size) {
 		printf("It is not a packet.\n");
 		return 0;
 	}
@@ -130,6 +131,14 @@ int try_make_net_packet(struct server *sv, struct client *ct)
 		return -1;
 	}
 	printf("CRC GOOD.\n");
+	/*TODO: */
+
+	ct->buffer_offset -= packet_size;
+	printf("packetsize : %d offset:%d\n", packet_size, ct->buffer_offset);
+	if(ct->buffer_offset > 0) {
+		memcpy(ct->buffer, ct->buffer + packet_size, ct->buffer_offset);
+		return try_make_net_packet(sv, ct);
+	}
 
 	return 0;
 }
