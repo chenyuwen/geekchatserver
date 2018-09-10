@@ -48,8 +48,28 @@ static inline int sizeof_raw_packet(struct raw_packet *packet)
 	return sizeof(struct raw_packet_head) + packet->head.packet_len;
 }
 
+static inline struct raw_packet *malloc_raw_packet(struct server *sv,
+	struct client *ct)
+{
+	return (struct raw_packet *)ct->respond;
+}
+
+static inline int free_raw_packet(struct server *sv, struct client *ct,
+	struct raw_packet *packet)
+{
+	return 0;
+}
+
+static inline int respond_raw_packet(struct server *sv, struct client *ct,
+	struct raw_packet *packet)
+{
+	write(ct->fd, (void *)packet, sizeof_raw_packet(packet));
+	return 0;
+}
+
 int dispose_packet(struct server *sv, struct client *ct, struct raw_packet *packet);
 int json_to_raw_packet(struct raw_packet *packet, json_t *json, int type);
+int respond_raw_packet(struct server *sv, struct client *ct, struct raw_packet *packet);
 
 #endif /*__PACKET_H__*/
 
