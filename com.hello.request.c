@@ -29,7 +29,7 @@ int method_hello_handler(struct server *sv, struct client *ct, json_t *json)
 	json_to_raw_packet(packet, rsp_json, PACKET_TYPE_UNENCRY);
 	respond_raw_packet(sv, ct, packet);
 
-	/*TODO: free json*/
+	/*free json*/
 	json_delete(rsp_json);
 	free_raw_packet(sv, ct, packet);
 	return 0;

@@ -23,7 +23,7 @@ struct timeout {
 
 struct client {
 	struct epoll_event event;
-	char name[20];
+	char name[20], ipaddr[20];
 	int fd;
 	struct sockaddr addr;
 	char *token;
@@ -39,8 +39,8 @@ struct server {
 	struct epoll_event event, eventlist[MAX_EVENTS];
 	struct sockaddr_in serveraddr;
 
-	map_t client_map;
-	map_t handler_map;
+	map_t clients_map;
+	map_t methods_map;
 };
 
 #endif /*__SERVER_H__*/

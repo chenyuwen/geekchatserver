@@ -14,6 +14,7 @@
 #include "server_configs.h"
 #include "packet.h"
 #include "server.h"
+#include "methods.h"
 
 #define addr_ntoa(addr)  (inet_ntoa(((struct sockaddr_in *)(addr))->sin_addr))
 
@@ -46,11 +47,11 @@ int accept_new_client(struct server *sv)
 
 	snprintf(ct->name, sizeof(ct->name), "%d", ct->fd);
 	/*TODO: lock*/
-	if(hashmap_remove(sv->client_map, ct->name) == MAP_OK) {
+	if(hashmap_remove(sv->clients_map, ct->name) == MAP_OK) {
 		printf("failed.\n");
 		return -1;
 	}
-	hashmap_put(sv->client_map, ct->name, ct);
+	hashmap_put(sv->clients_map, ct->name, ct);
 	/*TODO: unlock*/
 	ct->event.events = EPOLLIN | EPOLLET | EPOLLERR;
 	ct->event.data.fd = ct->fd;
@@ -59,7 +60,8 @@ int accept_new_client(struct server *sv)
 		perror("epoll_ctl");
 		return errno;
 	}
-	printf("New client:%s\n", addr_ntoa(&ct->addr));
+	strcpy(ct->ipaddr, addr_ntoa(&ct->addr));
+	printf("New client:%s\n", ct->ipaddr);
 
 	return 0;
 }
@@ -67,7 +69,7 @@ int accept_new_client(struct server *sv)
 int free_client_socket(struct server *sv, struct client *ct)
 {
 	int ret = 0;
-	printf("Close the client:%s\n", addr_ntoa(&ct->addr));
+	printf("Close the client:%s\n", ct->ipaddr);
 	ret = epoll_ctl(sv->epollfd, EPOLL_CTL_DEL, ct->fd, NULL);
 	if(ret < 0) {
 		perror("epoll_ctl");
@@ -75,7 +77,7 @@ int free_client_socket(struct server *sv, struct client *ct)
 	}
 
 	/*TODO: lock*/
-	hashmap_remove(sv->client_map, ct->name);
+	hashmap_remove(sv->clients_map, ct->name);
 	/*TODO: unlock*/
 	close(ct->fd);
 	free(ct);
@@ -105,11 +107,9 @@ int try_make_net_packet(struct server *sv, struct client *ct)
 		printf("CRC error.\n");
 		return -1;
 	}
-	printf("CRC GOOD.\n");
 	dispose_packet(sv, ct, packet);
 
 	ct->buffer_offset -= raw_packet_size;
-	printf("packetsize : %d offset:%d\n", raw_packet_size, ct->buffer_offset);
 	if(ct->buffer_offset > 0) {
 		memcpy(ct->buffer, ct->buffer + raw_packet_size, ct->buffer_offset);
 		return try_make_net_packet(sv, ct);
@@ -126,7 +126,7 @@ int client_socket(struct server *sv, struct epoll_event *event)
 
 	snprintf(name, sizeof(name), "%d", event->data.fd);
 	/*TODO:lock*/
-	ret = hashmap_get(sv->client_map, name, (any_t *)&ct);
+	ret = hashmap_get(sv->clients_map, name, (any_t *)&ct);
 	/*TODO:unlock*/
 	if(ret != MAP_OK) {
 		printf("Error\n");
@@ -161,7 +161,9 @@ int main(int argc, char **argv)
 	}
 
 	memset(sv, 0, sizeof(*sv));
-	sv->client_map = hashmap_new();
+	sv->clients_map = hashmap_new();
+	sv->methods_map = hashmap_new();
+	init_methods_maps(sv);
 	sv->serverfd = socket(AF_INET, SOCK_STREAM, 0);
 	if(sv->serverfd < 0) {
 		perror("socket");

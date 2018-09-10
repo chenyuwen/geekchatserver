@@ -300,12 +300,12 @@ int hashmap_get(map_t in, char* key, any_t *arg){
 	/* Linear probing, if necessary */
 	for(i = 0; i<MAX_CHAIN_LENGTH; i++){
 
-        int in_use = m->data[curr].in_use;
-        if (in_use == 1){
-            if (strcmp(m->data[curr].key,key)==0){
-                *arg = (m->data[curr].data);
-                return MAP_OK;
-            }
+		int in_use = m->data[curr].in_use;
+		if (in_use == 1){
+			if (strcmp(m->data[curr].key,key)==0){
+				*arg = (m->data[curr].data);
+				return MAP_OK;
+			}
 		}
 
 		curr = (curr + 1) % m->table_size;

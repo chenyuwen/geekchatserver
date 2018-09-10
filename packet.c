@@ -17,10 +17,6 @@
 #include "server.h"
 #include "methods.h"
 
-#ifndef ARRAY_SIZE
-#define ARRAY_SIZE(array) (sizeof(array) / sizeof(array[0]))
-#endif
-
 int json_to_raw_packet(struct raw_packet *packet, json_t *json, int type)
 {
 	uint32_t crc32;
@@ -36,14 +32,13 @@ int json_to_raw_packet(struct raw_packet *packet, json_t *json, int type)
 int call_method(struct server *sv, struct client *ct, json_t *json, const char *method)
 {
 	int i = 0;
-	for(i=0; i<ARRAY_SIZE(methods); i++) {
-		printf("%s %s\n", method, methods[i].method_name);
-		if(!strncmp(method, methods[i].method_name, strlen(methods[i].method_name))) {
-			methods[i].method_handler(sv, ct, json);
-			break;
-		}
+	int (*handler)(struct server *, struct client *, json_t *);
+
+	hashmap_get(sv->methods_map, (char *)method, (any_t *)&handler);
+	if(handler == NULL) {
+		return -1;
 	}
-	return 0;
+	return handler(sv, ct, json);
 }
 
 int dispose_packet(struct server *sv, struct client *ct, struct raw_packet *packet)
@@ -51,8 +46,8 @@ int dispose_packet(struct server *sv, struct client *ct, struct raw_packet *pack
 	json_t *json, *method_json;
 	const char *tmp = NULL;
 	json_error_t json_err;
+	int ret = 0;
 
-	printf("json:%s len:%d\n", packet->buffer, packet->head.packet_len);
 	json = json_loadb(packet->buffer, strlen(packet->buffer), 0, &json_err);
 	if(json == NULL) {
 		printf("json_loadb failed.\n");
@@ -62,11 +57,12 @@ int dispose_packet(struct server *sv, struct client *ct, struct raw_packet *pack
 	method_json = json_object_get(json, "method");
 	tmp = json_string_value(method_json);
 	if(tmp == NULL) {
-		printf("methos is null.\n");
+		printf("the methods is null.\n");
 		return -1;
 	}
-	call_method(sv, ct, json, tmp);
+	printf("From %s:%s\n", ct->ipaddr, packet->buffer);
+	ret = call_method(sv, ct, json, tmp);
 	json_delete(json);
-	return 0;
+	return ret;
 }
 
