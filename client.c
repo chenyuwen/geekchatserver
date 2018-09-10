@@ -15,11 +15,13 @@
 //#define SERVER_DEFAULT_ADDR "149.28.70.170"
 #define SERVER_DEFAULT_ADDR "127.0.0.1"
 
+/*
 struct client {
 	int fd;
 	struct sockaddr addr;
 	char *token;
 };
+*/
 
 int dump_buffer(const unsigned char *buffer, int len)
 {

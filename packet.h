@@ -1,6 +1,12 @@
 #ifndef __PACKET_H__
 #define __PACKET_H__
 
+#include "c_hashmap/hashmap.h"
+#include "crc32/crc32.h"
+#include "jansson/jansson.h"
+#include "server_configs.h"
+#include "packet.h"
+#include "server.h"
 #include "server_configs.h"
 
 #define PACKET_TYPE_UNENCRY 0x01
@@ -29,6 +35,8 @@ struct crc32_raw_packet {
 	uint8_t crcdata[0];
 };
 #pragma pack ()
+
+int dispose_packet(struct server *sv, struct client *ct, struct raw_packet *packet);
 
 #endif /*__PACKET_H__*/
 

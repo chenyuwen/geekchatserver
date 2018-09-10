@@ -13,34 +13,9 @@
 #include "crc32/crc32.h"
 #include "server_configs.h"
 #include "packet.h"
+#include "server.h"
 
 #define addr_ntoa(addr)  (inet_ntoa(((struct sockaddr_in *)(addr))->sin_addr))
-
-struct timeout {
-	int alive_time;
-};
-
-struct client {
-	struct epoll_event event;
-	char name[20];
-	int fd;
-	struct sockaddr addr;
-	char *token;
-	struct timeout timeout;
-
-	int buffer_offset;
-	struct raw_packet packet;
-	char buffer[SERVER_MAX_PACKETS];
-};
-
-struct server {
-	int serverfd, epollfd, stop_server;
-	struct epoll_event event, eventlist[MAX_EVENTS];
-	struct sockaddr_in serveraddr;
-
-	map_t client_map;
-	map_t handler_map;
-};
 
 int accept_new_client(struct server *sv)
 {
@@ -131,7 +106,7 @@ int try_make_net_packet(struct server *sv, struct client *ct)
 		return -1;
 	}
 	printf("CRC GOOD.\n");
-	/*TODO: */
+	dispose_packet(sv, ct, packet);
 
 	ct->buffer_offset -= packet_size;
 	printf("packetsize : %d offset:%d\n", packet_size, ct->buffer_offset);
