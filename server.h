@@ -31,6 +31,7 @@ struct client {
 
 	int buffer_offset;
 	char buffer[SERVER_MAX_PACKETS];
+	char respond[SERVER_MAX_PACKETS];
 };
 
 struct server {

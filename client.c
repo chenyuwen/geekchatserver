@@ -84,6 +84,9 @@ int main(int argc, char **argv)
 	crc32 = crc32_classic(&crc32_packet->crcdata, packet->head.packet_len);
 	packet->head.crc32 = htonl(crc32);
 	ret = write(serverfd, buffer, packet->head.packet_len + sizeof(struct raw_packet_head));
+
+	ret = read(serverfd, buffer, 200);
+	printf("json:%s\n", packet->buffer);
 	printf("close\n");
 	close(serverfd);
 
