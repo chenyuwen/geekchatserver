@@ -9,6 +9,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include "crc32/crc32.h"
+#include "jansson/jansson.h"
 #include "packet.h"
 
 #define SERVER_DEFAULT_PORT 1200
@@ -47,6 +48,7 @@ int main(int argc, char **argv)
 	unsigned char buffer[512];
 	struct raw_packet *packet = (void *)buffer;
 	struct crc32_raw_packet *crc32_packet = (struct crc32_raw_packet *)buffer;
+	json_t *json, *item;
 
 	if(argc >= 2) {
 		port = atoi(argv[1]);
@@ -72,24 +74,16 @@ int main(int argc, char **argv)
 	printf("write\n");
 	packet->head.packet_len = 100;
 	packet->head.type = PACKET_TYPE_UNENCRY;
-	memset(packet->buffer, '1', 99);
+	memset(packet->buffer, 0, 100);
+	item = json_object();
+	json = json_object();
+	json_object_set_new(json, "method", json_string("com.hello.request"));
+	packet->head.packet_len = json_dumpb(json, packet->buffer, 100, 0);
+	printf("json:%s\n", packet->buffer);
+
 	crc32 = crc32_classic(&crc32_packet->crcdata, packet->head.packet_len);
 	packet->head.crc32 = htonl(crc32);
-	memcpy(buffer + 108, buffer, 108);
-	ret = write(serverfd, buffer, 100);
-	ret = write(serverfd, buffer + 100, sizeof(struct raw_packet_head));
-	ret = write(serverfd, buffer, 108);
-	ret = write(serverfd, buffer, 108);
-	ret = write(serverfd, buffer, 108);
-	ret = write(serverfd, buffer, 108);
-	printf("write 2\n");
-	dump_buffer(buffer, 108 * 2);
-	ret = write(serverfd, buffer, 108 * 2);
-	printf("write 2 - 100\n");
-	ret = write(serverfd, buffer, 108 * 2 - 100);
-	ret = write(serverfd, buffer + 108 * 2 - 100, 100);
-	/**/
-	ret = write(serverfd, buffer, 108);
+	ret = write(serverfd, buffer, packet->head.packet_len + sizeof(struct raw_packet_head));
 	printf("close\n");
 	close(serverfd);
 
