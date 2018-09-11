@@ -1,6 +1,6 @@
 all: server client
 
-server: server.o packet.o libjansson.a libcrc32.a libhashmap.a libmethods.a
+server: server.o packet.o users.o libjansson.a libcrc32.a libhashmap.a libmethods.a
 	gcc $(filter %.o, $^) -L./ $(patsubst lib%.a,-l%, $(filter %.a,$^)) -o server
 
 client: libjansson.a libcrc32.a libhashmap.a client.o

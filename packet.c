@@ -17,7 +17,31 @@
 #include "server.h"
 #include "methods.h"
 
-int json_to_raw_packet(struct raw_packet *packet, json_t *json, int type)
+int build_not_found_json(struct server *sv, struct client *ct, json_t *json,
+	const char *method)
+{
+	json_object_set_new(json, "method", json_string(method));
+	json_object_set_new(json, "info", json_string("not_found"));
+	json_object_set_new(json, "status", json_false());
+	return 0;
+}
+
+int respond_not_found(struct server *sv, struct client *ct, json_t *json)
+{
+	json_t *rsp_json = json_object();
+	struct raw_packet *packet = malloc_raw_packet(sv, ct);
+
+	build_not_found_json(sv, ct, json, "null");
+	json_to_raw_packet(rsp_json, PACKET_TYPE_UNENCRY, packet);
+	respond_raw_packet(sv, ct, packet);
+
+	/*free json*/
+	json_delete(rsp_json);
+	free_raw_packet(sv, ct, packet);
+	return 0;
+}
+
+int json_to_raw_packet(json_t *json, int type, struct raw_packet *packet)
 {
 	uint32_t crc32;
 	struct crc32_raw_packet *crc32_packet = (struct crc32_raw_packet *)packet;
@@ -36,6 +60,7 @@ int call_method(struct server *sv, struct client *ct, json_t *json, const char *
 
 	hashmap_get(sv->methods_map, (char *)method, (any_t *)&handler);
 	if(handler == NULL) {
+		respond_not_found(sv, ct, json);
 		return -1;
 	}
 	return handler(sv, ct, json);

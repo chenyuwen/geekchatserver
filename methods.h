@@ -30,7 +30,7 @@ static int init_methods_maps(struct server *sv)
 {
 	int i = 0, ret;
 	for(i=0; i<ARRAY_SIZE(methods); i++) {
-		ret = hashmap_put(sv->methods_map, (char *)methods->name, (any_t)methods->handler);
+		ret = hashmap_put(sv->methods_map, (char *)methods[i].name, (any_t)methods[i].handler);
 	}
 	return 0;
 }

@@ -26,7 +26,7 @@ int method_com_login_request(struct server *sv, struct client *ct, json_t *json)
 	json_object_set_new(rsp_json, "method", json_string("com.login.respond"));
 	json_object_set_new(rsp_json, "appid", json_string("random"));
 	json_object_set_new(rsp_json, "status", json_true());
-	json_to_raw_packet(packet, rsp_json, PACKET_TYPE_UNENCRY);
+	json_to_raw_packet(rsp_json, PACKET_TYPE_UNENCRY, packet);
 	respond_raw_packet(sv, ct, packet);
 
 	/*free json*/

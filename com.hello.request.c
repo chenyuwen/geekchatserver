@@ -25,7 +25,7 @@ int method_com_hello_request(struct server *sv, struct client *ct, json_t *json)
 
 	json_object_set_new(rsp_json, "method", json_string("com.hello.respond"));
 	json_object_set_new(rsp_json, "status", json_true());
-	json_to_raw_packet(packet, rsp_json, PACKET_TYPE_UNENCRY);
+	json_to_raw_packet(rsp_json, PACKET_TYPE_UNENCRY, packet);
 	respond_raw_packet(sv, ct, packet);
 
 	/*free json*/

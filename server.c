@@ -15,6 +15,7 @@
 #include "packet.h"
 #include "server.h"
 #include "methods.h"
+#include "users.h"
 
 #define addr_ntoa(addr)  (inet_ntoa(((struct sockaddr_in *)(addr))->sin_addr))
 
@@ -137,7 +138,7 @@ int client_socket(struct server *sv, struct epoll_event *event)
 		return free_client_socket(sv, ct);
 	} else if(event->events & EPOLLIN) {
 		ret = read(ct->fd, ct->buffer + ct->buffer_offset, sizeof(ct->buffer) -
-			ct->buffer_offset);
+			ct->buffer_offset - sizeof(struct raw_packet_head));
 		if(ret <= 0) {
 			return free_client_socket(sv, ct);
 		}
@@ -164,6 +165,7 @@ int main(int argc, char **argv)
 	sv->clients_map = hashmap_new();
 	sv->methods_map = hashmap_new();
 	init_methods_maps(sv);
+	init_users_map(sv);
 	sv->serverfd = socket(AF_INET, SOCK_STREAM, 0);
 	if(sv->serverfd < 0) {
 		perror("socket");
