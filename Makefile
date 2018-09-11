@@ -6,7 +6,7 @@ server: server.o packet.o users.o libjansson.a libcrc32.a libhashmap.a libmethod
 client: libjansson.a libcrc32.a libhashmap.a client.o
 	gcc $(filter %.o, $^) -L./ $(patsubst lib%.a,-l%, $(filter %.a,$^)) -o client
 
-libmethods.a: com.hello.request.o com.login.seed.request.o com.login.request.o
+libmethods.a: $(patsubst %.c, %.o, $(wildcard ./methods/*.c))
 	ar -r $@ $^
 
 libcrc32.a: ./crc32/crc32.o
@@ -23,5 +23,5 @@ libhashmap.a: ./c_hashmap/hashmap.o
 
 .PHONY : clean
 clean:
-	@rm server client *.o *.a ./crc32/*.o ./c_hashmap/*.o ./jansson/*.o
+	@rm server client *.o *.a ./crc32/*.o ./c_hashmap/*.o ./jansson/*.o ./methods/*.o
 

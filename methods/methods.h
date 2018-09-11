@@ -1,8 +1,6 @@
 #ifndef __METHODS_H__
 #define __METHODS_H__
 
-#include "packet.h"
-
 #ifndef ARRAY_SIZE
 #define ARRAY_SIZE(array) (sizeof(array) / sizeof(array[0]))
 #endif

@@ -9,15 +9,15 @@
 #include <sys/epoll.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include "c_hashmap/hashmap.h"
-#include "crc32/crc32.h"
-#include "jansson/jansson.h"
-#include "server_configs.h"
-#include "packet.h"
-#include "server.h"
+#include "../c_hashmap/hashmap.h"
+#include "../crc32/crc32.h"
+#include "../jansson/jansson.h"
+#include "../server_configs.h"
+#include "../packet.h"
+#include "../server.h"
+#include "../users.h"
+#include "../err.h"
 #include "methods.h"
-#include "users.h"
-#include "err.h"
 
 int method_com_login_seed_request(struct server *sv, struct client *ct, json_t *json)
 {
@@ -41,7 +41,7 @@ int method_com_login_seed_request(struct server *sv, struct client *ct, json_t *
 		/*TODO: Add to waitqueue*/
 		printf("Not found\n");
 		build_not_found_json(sv, ct, rsp_json, "com.login.seed.respond");
-		goto out;
+		goto respond;
 	}
 
 	json_object_set_new(rsp_json, "method", json_string("com.login.seed.respond"));

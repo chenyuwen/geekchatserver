@@ -14,7 +14,7 @@
 #include "server_configs.h"
 #include "packet.h"
 #include "server.h"
-#include "methods.h"
+#include "methods/methods.h"
 #include "users.h"
 
 #define addr_ntoa(addr)  (inet_ntoa(((struct sockaddr_in *)(addr))->sin_addr))

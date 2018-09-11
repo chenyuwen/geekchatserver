@@ -13,8 +13,8 @@
 #include "packet.h"
 
 #define SERVER_DEFAULT_PORT 1200
-//#define SERVER_DEFAULT_ADDR "149.28.70.170"
-#define SERVER_DEFAULT_ADDR "127.0.0.1"
+#define SERVER_DEFAULT_ADDR "149.28.70.170"
+//#define SERVER_DEFAULT_ADDR "127.0.0.1"
 
 int dump_buffer(const unsigned char *buffer, int len)
 {
@@ -39,22 +39,27 @@ int test_com_login_seed_request(int socketfd)
 	struct raw_packet *packet = (void *)buffer;
 	uint32_t crc32 = 0;
 	json_t *json = json_object();
-	int ret = 0;
+	int ret = 0, i = 0;
+	unsigned char names[][20] = {"", "list", "lisi", "zhangsan"};
 
 	memset(buffer, 0, sizeof(buffer));
 	packet->head.type = PACKET_TYPE_UNENCRY;
 	json_object_set_new(json, "method", json_string("com.login.seed.request"));
-	json_object_set_new(json, "username", json_string("zhangsan"));
-	packet->head.packet_len = json_dumpb(json, packet->buffer, 100, 0);
 
-	crc32 = crc32_classic(&crc32_packet->crcdata, packet->head.packet_len);
-	packet->head.crc32 = htonl(crc32);
+	for(i=0; i<4; i++) {
+		json_object_set_new(json, "username", json_string(names[i]));
+		packet->head.packet_len = json_dumpb(json, packet->buffer, 100, 0);
 
-	printf("Write:%s\n", packet->buffer);
-	ret = write(socketfd, buffer, packet->head.packet_len + sizeof(struct raw_packet_head));
+		crc32 = crc32_classic(&crc32_packet->crcdata, packet->head.packet_len);
+		packet->head.crc32 = htonl(crc32);
 
-	ret = read(socketfd, buffer, 200);
-	printf("Read:%s\n", packet->buffer);
+		printf("Write:%s\n", packet->buffer);
+		ret = write(socketfd, buffer, packet->head.packet_len + sizeof(struct raw_packet_head));
+
+		ret = read(socketfd, buffer, 200);
+		printf("Read:%s\n", packet->buffer);
+		json_object_del(json, "username");
+	}
 
 	json_delete(json);
 	return 0;

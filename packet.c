@@ -15,7 +15,6 @@
 #include "server_configs.h"
 #include "packet.h"
 #include "server.h"
-#include "methods.h"
 
 int build_not_found_json(struct server *sv, struct client *ct, json_t *json,
 	const char *method)
