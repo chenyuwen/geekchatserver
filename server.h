@@ -12,6 +12,8 @@
 #include "packet.h"
 #include "mysql_connector.h"
 
+struct user;
+
 struct timeout {
 	int alive_time;
 };
@@ -23,6 +25,7 @@ struct client {
 	struct sockaddr addr;
 	char *token;
 	struct timeout timeout;
+	struct user *usr;
 
 	int buffer_offset;
 	char buffer[SERVER_MAX_PACKETS];

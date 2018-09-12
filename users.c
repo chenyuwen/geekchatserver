@@ -18,6 +18,23 @@ int init_users_map(struct server *sv)
 	return 0;
 }
 
+int user_get(struct server *sv, struct user *usr)
+{
+	usr->use_cnt++;
+	return 0;
+}
+
+int user_put(struct server *sv, struct user *usr)
+{
+	usr->use_cnt--;
+	if(usr->use_cnt == 0) {
+		printf("Free user:%s\n", usr->username);
+		hashmap_remove(sv->users_map, usr->username);
+		free(usr);
+	}
+	return 0;
+}
+
 int get_user_by_name_from_mysql(struct server *sv, const char *username, struct user **usr)
 {
 	struct mysql_config *config = sv->mysql_config;
@@ -28,7 +45,6 @@ int get_user_by_name_from_mysql(struct server *sv, const char *username, struct 
 	struct user *tmp = NULL;
 
 	snprintf(query, sizeof(query),"select * from users where username = '%s'", username);
-	printf("%s\n", query);
 	ret = mysql_query(config->mysql, query);
 	if(ret < 0) {
 		printf("mysql_query: %s\n", mysql_error(config->mysql));
@@ -41,8 +57,11 @@ int get_user_by_name_from_mysql(struct server *sv, const char *username, struct 
 		return -mysql_errno(config->mysql);
 	}
 
-	if(mysql_num_rows(result) != 1) {
-		printf("Error: The username %s was the same.\n", username);
+	if(mysql_num_rows(result) >= 2) {
+		printf("Error: The username '%s' was the same.\n", username);
+		ret = -1;
+		goto out;
+	} else if(!mysql_num_rows(result)) {
 		ret = -1;
 		goto out;
 	}
@@ -53,6 +72,7 @@ int get_user_by_name_from_mysql(struct server *sv, const char *username, struct 
 		goto out;
 	}
 
+	memset(tmp, 0, sizeof(*tmp));
 	row = mysql_fetch_row(result);
 	strncpy(tmp->username, username, sizeof(tmp->username));
 	ret = hashmap_put(sv->users_map, tmp->username, tmp);
@@ -69,13 +89,34 @@ out:
 	return ret;
 }
 
-int get_user_by_name(struct server *sv, const char *username, struct user **usr)
+int get_user_by_name(struct server *sv, struct client *ct, const char *username,
+	struct user **usr)
 {
-	int ret = hashmap_get(sv->users_map, (char *)username, (any_t *)usr);
-	if(*usr == NULL || ret != MAP_OK) {
-		return get_user_by_name_from_mysql(sv, username, usr);
+	int ret = 0;
+	if(ct->usr != NULL) {
+		ret = strncmp(username, ct->usr->username, sizeof(ct->usr->username));
+		if(ret == 0) {
+			goto out;
+		}
+		user_put(sv, ct->usr);
+		ct->usr = NULL;
 	}
-	return 0;
+
+	ret = hashmap_get(sv->users_map, (char *)username, (any_t *)&ct->usr);
+	if(ct->usr == NULL || ret != MAP_OK) {
+		ret = get_user_by_name_from_mysql(sv, username, &ct->usr);
+		if(ret < 0) {
+			ct->usr = NULL;
+			goto err;
+		}
+		user_get(sv, ct->usr);
+	}
+
+out:
+	user_get(sv, ct->usr);
+err:
+	*usr = ct->usr;
+	return ret;
 }
 
 int json_to_user(struct server *sv, json_t *json)

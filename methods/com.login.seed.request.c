@@ -28,19 +28,16 @@ int method_com_login_seed_request(struct server *sv, struct client *ct, json_t *
 	const char *username = NULL;
 	int ret = 0;
 
-	printf("%s\n", __func__);
 	username = json_string_value(json_object_get(json, "username"));
 	if(username == NULL) {
 		/*TODO: Can't find this user.*/
+		printf("Warning: The packet did not have username.\n");
 		build_not_found_json(sv, ct, rsp_json, "com.login.seed.respond");
 		goto respond;
 	}
-	printf("username:%s\n", username);
-	ret = get_user_by_name(sv, username, &usr);
-	printf("result: %d\n", ret);
+	ret = get_user_by_name(sv, ct, username, &usr);
 	if(ret < 0) {
-		/*TODO: Add to waitqueue*/
-		printf("Not found\n");
+		printf("Warning: The user '%s' did not registered.\n", username);
 		build_not_found_json(sv, ct, rsp_json, "com.login.seed.respond");
 		goto respond;
 	}
@@ -49,6 +46,7 @@ int method_com_login_seed_request(struct server *sv, struct client *ct, json_t *
 	json_object_set_new(rsp_json, "seed", json_string("random"));
 	json_object_set_new(rsp_json, "username", json_string(usr->username));
 	json_object_set_new(rsp_json, "status", json_true());
+	user_put(sv, usr);
 
 respond:
 	json_to_raw_packet(rsp_json, PACKET_TYPE_UNENCRY, packet);

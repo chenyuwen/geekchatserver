@@ -80,6 +80,7 @@ int free_client_socket(struct server *sv, struct client *ct)
 	/*TODO: lock*/
 	hashmap_remove(sv->clients_map, ct->name);
 	/*TODO: unlock*/
+	user_put(sv, ct->usr);
 	close(ct->fd);
 	free(ct);
 	return ret;

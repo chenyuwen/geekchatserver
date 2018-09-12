@@ -40,7 +40,7 @@ int test_com_login_seed_request(int socketfd)
 	uint32_t crc32 = 0;
 	json_t *json = json_object();
 	int ret = 0, i = 0;
-	unsigned char names[][20] = {"", "list", "lisi", "zhangsan"};
+	unsigned char names[][20] = {"", "lisi", "lisi", "zhangsan"};
 
 	memset(buffer, 0, sizeof(buffer));
 	packet->head.type = PACKET_TYPE_UNENCRY;
