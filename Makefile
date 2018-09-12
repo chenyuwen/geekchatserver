@@ -9,9 +9,6 @@ client: libjansson.a libcrc32.a libhashmap.a client.o
 libserver.a: packet.o users.o mysql_connector.o random_pool.o
 	ar -r $@ $^
 
-mysql_connector.o: mysql_connector.c
-	gcc -c $^ -o $@ -lmysqlclient
-
 libmethods.a: $(patsubst %.c, %.o, $(wildcard ./methods/*.c))
 	ar -r $@ $^
 
@@ -23,6 +20,9 @@ libjansson.a:: $(patsubst %.c, %.o, $(wildcard ./jansson/*.c))
 
 libhashmap.a: ./c_hashmap/hashmap.o
 	ar -r $@ $^
+
+mysql_connector.o: mysql_connector.c
+	gcc -c $^ -o $@ -lmysqlclient
 
 .PHONY : clean
 clean:

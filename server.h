@@ -39,6 +39,7 @@ struct server {
 	struct sockaddr_in serveraddr;
 	struct mysql_config *mysql_config;
 	struct random_pool random;
+	int dump;
 
 	map_t clients_map;
 	map_t methods_map;

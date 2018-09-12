@@ -17,6 +17,7 @@
 #include "methods/methods.h"
 #include "users.h"
 #include "random_pool.h"
+#include "hex.h"
 
 #define addr_ntoa(addr)  (inet_ntoa(((struct sockaddr_in *)(addr))->sin_addr))
 
@@ -98,18 +99,21 @@ int try_make_net_packet(struct server *sv, struct client *ct)
 
 	if(ct->buffer_offset < sizeof(struct raw_packet_head)) {
 		printf("It is not a packet.\n");
+		if(sv->dump) dump_buffer((void *)packet, ct->buffer_offset);
 		return 0;
 	}
 
 	raw_packet_size = sizeof_raw_packet(packet);
 	if(ct->buffer_offset < raw_packet_size) {
 		printf("It is not a packet.\n");
+		if(sv->dump) dump_buffer((void *)packet, ct->buffer_offset);
 		return 0;
 	}
 
 	crc32 = crc32_classic(&crc32_packet->crcdata, packet->head.packet_len);
 	if(crc32 != ntohl(packet->head.crc32)) {
 		printf("CRC error.\n");
+		if(sv->dump) dump_buffer((void *)packet, raw_packet_size);
 		return -1;
 	}
 	dispose_packet(sv, ct, packet);
@@ -169,6 +173,7 @@ int main(int argc, char **argv)
 	sv->clients_map = hashmap_new();
 	sv->methods_map = hashmap_new();
 	sv->mysql_config = &default_mysql_config;
+	sv->dump = SERVER_DUMP_BUFFER;
 	init_methods_maps(sv);
 	init_users_map(sv);
 	init_mysql(sv);

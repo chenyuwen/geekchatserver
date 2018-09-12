@@ -17,18 +17,8 @@
 #include "../server.h"
 #include "../users.h"
 #include "../err.h"
+#include "../hex.h"
 #include "methods.h"
-
-int hex_to_ascii(char *dst, unsigned char *src, int srclen)
-{
-	static const char *numlists = {"0123456789ABCDEF"};
-	int i = 0;
-	for(i=0; i<srclen; i++) {
-		dst[i * 2 + 0] = numlists[(src[i] >> 4) & 0x0F];
-		dst[i * 2 + 1] = numlists[(src[i] >> 0) & 0x0F];
-	}
-	return 0;
-}
 
 int build_new_token(struct server *sv, struct user *usr)
 {

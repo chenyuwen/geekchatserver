@@ -9,6 +9,7 @@
 #define URANDOM_FILE_DIR "/dev/urandom"
 #define SERVER_TOKEN_LENS 20
 #define SERVER_SEED_LENS 20
+#define SERVER_DUMP_BUFFER 1
 
 static struct mysql_config default_mysql_config = {
 	.serverip = "127.0.0.1",
