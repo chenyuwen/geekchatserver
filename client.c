@@ -43,12 +43,14 @@ int test_com_login_seed_request(int socketfd)
 	unsigned char names[][20] = {"", "lisi", "lisi", "zhangsan"};
 
 	memset(buffer, 0, sizeof(buffer));
-	packet->head.type = PACKET_TYPE_UNENCRY;
 	json_object_set_new(json, "method", json_string("com.login.seed.request"));
 
 	for(i=0; i<4; i++) {
 		json_object_set_new(json, "username", json_string(names[i]));
+
+		memset(buffer, 0, sizeof(buffer));
 		packet->head.packet_len = json_dumpb(json, packet->buffer, 100, 0);
+		packet->head.type = PACKET_TYPE_UNENCRY;
 
 		crc32 = crc32_classic(&crc32_packet->crcdata, packet->head.packet_len);
 		packet->head.crc32 = htonl(crc32);
@@ -56,6 +58,7 @@ int test_com_login_seed_request(int socketfd)
 		printf("Write:%s\n", packet->buffer);
 		ret = write(socketfd, buffer, packet->head.packet_len + sizeof(struct raw_packet_head));
 
+		memset(buffer, 0, sizeof(buffer));
 		ret = read(socketfd, buffer, 200);
 		printf("Read:%s\n", packet->buffer);
 		json_object_del(json, "username");
@@ -97,9 +100,8 @@ int main(int argc, char **argv)
 	}
 
 	printf("write\n");
-	packet->head.packet_len = 100;
+	memset(buffer, 0, sizeof(buffer));
 	packet->head.type = PACKET_TYPE_UNENCRY;
-	memset(packet->buffer, 0, 100);
 	json = json_object();
 	json_object_set_new(json, "method", json_string("test"));
 	packet->head.packet_len = json_dumpb(json, packet->buffer, 100, 0);
@@ -109,7 +111,7 @@ int main(int argc, char **argv)
 	packet->head.crc32 = htonl(crc32);
 	ret = write(serverfd, buffer, packet->head.packet_len + sizeof(struct raw_packet_head));
 
-	memset(packet->buffer, 0, 100);
+	memset(buffer, 0, sizeof(buffer));
 	ret = read(serverfd, buffer, 200);
 	printf("json:%s\n", packet->buffer);
 
