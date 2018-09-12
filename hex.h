@@ -13,7 +13,7 @@ static inline int hex_to_ascii(char *dst, unsigned char *src, int srclen)
 	return 0;
 }
 
-static inline int dump_buffer(const char *buffer, int len)
+static inline int dump_buffer(const unsigned char *buffer, int len)
 {
 	int i = 0;
 	for(i=0; i<len; i++) {
