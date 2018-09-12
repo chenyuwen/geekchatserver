@@ -101,7 +101,7 @@ int main(int argc, char **argv)
 	packet->head.type = PACKET_TYPE_UNENCRY;
 	memset(packet->buffer, 0, 100);
 	json = json_object();
-	json_object_set_new(json, "method", json_string("com.hello.request"));
+	json_object_set_new(json, "method", json_string("test"));
 	packet->head.packet_len = json_dumpb(json, packet->buffer, 100, 0);
 	printf("json:%s\n", packet->buffer);
 
@@ -109,6 +109,7 @@ int main(int argc, char **argv)
 	packet->head.crc32 = htonl(crc32);
 	ret = write(serverfd, buffer, packet->head.packet_len + sizeof(struct raw_packet_head));
 
+	memset(packet->buffer, 0, 100);
 	ret = read(serverfd, buffer, 200);
 	printf("json:%s\n", packet->buffer);
 

@@ -30,7 +30,7 @@ int respond_not_found(struct server *sv, struct client *ct, json_t *json)
 	json_t *rsp_json = json_object();
 	struct raw_packet *packet = malloc_raw_packet(sv, ct);
 
-	build_not_found_json(sv, ct, json, "null");
+	build_not_found_json(sv, ct, rsp_json, "null");
 	json_to_raw_packet(rsp_json, PACKET_TYPE_UNENCRY, packet);
 	respond_raw_packet(sv, ct, packet);
 

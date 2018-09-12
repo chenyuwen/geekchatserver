@@ -16,6 +16,7 @@
 #include "server.h"
 #include "methods/methods.h"
 #include "users.h"
+#include "random_pool.h"
 
 #define addr_ntoa(addr)  (inet_ntoa(((struct sockaddr_in *)(addr))->sin_addr))
 
@@ -169,6 +170,10 @@ int main(int argc, char **argv)
 	init_methods_maps(sv);
 	init_users_map(sv);
 	init_mysql(sv);
+	ret = init_random_pool(&sv->random);
+	if(ret < 0) {
+		return ret;
+	}
 	sv->serverfd = socket(AF_INET, SOCK_STREAM, 0);
 	if(sv->serverfd < 0) {
 		perror("socket");

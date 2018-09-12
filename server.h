@@ -11,6 +11,7 @@
 #include "server_configs.h"
 #include "packet.h"
 #include "mysql_connector.h"
+#include "random_pool.h"
 
 struct user;
 
@@ -37,6 +38,7 @@ struct server {
 	struct epoll_event event, eventlist[MAX_EVENTS];
 	struct sockaddr_in serveraddr;
 	struct mysql_config *mysql_config;
+	struct random_pool random;
 
 	map_t clients_map;
 	map_t methods_map;

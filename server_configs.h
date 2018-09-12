@@ -6,6 +6,9 @@
 #define SERVER_DEFAULT_PORT 1200
 #define SERVER_MAX_PACKETS 4096
 #define MAX_EVENTS 500
+#define URANDOM_FILE_DIR "/dev/urandom"
+#define SERVER_TOKEN_LENS 20
+#define SERVER_SEED_LENS 20
 
 static struct mysql_config default_mysql_config = {
 	.serverip = "127.0.0.1",

@@ -6,7 +6,7 @@ server: server.o libserver.a mysql_connector.o libjansson.a libcrc32.a libhashma
 client: libjansson.a libcrc32.a libhashmap.a client.o
 	gcc $(filter %.o, $^) -L./ $(patsubst lib%.a,-l%, $(filter %.a,$^)) -o client
 
-libserver.a: packet.o users.o mysql_connector.o
+libserver.a: packet.o users.o mysql_connector.o random_pool.o
 	ar -r $@ $^
 
 mysql_connector.o: mysql_connector.c

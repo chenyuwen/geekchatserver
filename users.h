@@ -2,9 +2,11 @@
 #define __USER_H__
 
 #include "server.h"
+#include "server_configs.h"
 
 struct user {
-	char appid[20];
+	char token[SERVER_TOKEN_LENS + 1];
+	char seed[SERVER_SEED_LENS + 1];
 	char username[20];
 	int is_online;
 	int use_cnt;

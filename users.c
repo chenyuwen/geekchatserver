@@ -57,11 +57,11 @@ int get_user_by_name_from_mysql(struct server *sv, const char *username, struct 
 		return -mysql_errno(config->mysql);
 	}
 
-	if(mysql_num_rows(result) >= 2) {
-		printf("Error: The username '%s' was the same.\n", username);
+	if(!mysql_num_rows(result)) {
 		ret = -1;
 		goto out;
-	} else if(!mysql_num_rows(result)) {
+	} else if(mysql_num_rows(result) >= 2) {
+		printf("Error: The username '%s' was the same.\n", username);
 		ret = -1;
 		goto out;
 	}
