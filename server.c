@@ -164,8 +164,10 @@ int main(int argc, char **argv)
 	memset(sv, 0, sizeof(*sv));
 	sv->clients_map = hashmap_new();
 	sv->methods_map = hashmap_new();
+	sv->mysql_config = &default_mysql_config;
 	init_methods_maps(sv);
 	init_users_map(sv);
+	init_mysql(sv);
 	sv->serverfd = socket(AF_INET, SOCK_STREAM, 0);
 	if(sv->serverfd < 0) {
 		perror("socket");

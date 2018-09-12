@@ -37,7 +37,8 @@ int method_com_login_seed_request(struct server *sv, struct client *ct, json_t *
 	}
 	printf("username:%s\n", username);
 	ret = get_user_by_name(sv, username, &usr);
-	if(ret == -ERR_WAIT) {
+	printf("result: %d\n", ret);
+	if(ret < 0) {
 		/*TODO: Add to waitqueue*/
 		printf("Not found\n");
 		build_not_found_json(sv, ct, rsp_json, "com.login.seed.respond");

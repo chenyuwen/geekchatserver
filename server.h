@@ -1,12 +1,6 @@
 #ifndef __SERVER_H__
 #define __SERVER_H__
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <errno.h>
-#include <string.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/epoll.h>
@@ -16,6 +10,7 @@
 #include "crc32/crc32.h"
 #include "server_configs.h"
 #include "packet.h"
+#include "mysql_connector.h"
 
 struct timeout {
 	int alive_time;
@@ -38,6 +33,7 @@ struct server {
 	int serverfd, epollfd, stop_server;
 	struct epoll_event event, eventlist[MAX_EVENTS];
 	struct sockaddr_in serveraddr;
+	struct mysql_config *mysql_config;
 
 	map_t clients_map;
 	map_t methods_map;

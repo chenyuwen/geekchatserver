@@ -90,3 +90,28 @@ int dispose_packet(struct server *sv, struct client *ct, struct raw_packet *pack
 	return ret;
 }
 
+int sizeof_raw_packet(struct raw_packet *packet)
+{
+	return sizeof(struct raw_packet_head) + packet->head.packet_len;
+}
+
+struct raw_packet *malloc_raw_packet(struct server *sv,
+	struct client *ct)
+{
+	return (struct raw_packet *)ct->respond;
+}
+
+int free_raw_packet(struct server *sv, struct client *ct,
+	struct raw_packet *packet)
+{
+	return 0;
+}
+
+int respond_raw_packet(struct server *sv, struct client *ct,
+	struct raw_packet *packet)
+{
+	printf("To %s:%s\n", ct->ipaddr, packet->buffer);
+	write(ct->fd, (void *)packet, sizeof_raw_packet(packet));
+	return 0;
+}
+

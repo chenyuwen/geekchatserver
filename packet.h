@@ -5,9 +5,10 @@
 #include "crc32/crc32.h"
 #include "jansson/jansson.h"
 #include "server_configs.h"
-#include "packet.h"
 #include "server.h"
-#include "server_configs.h"
+
+struct client;
+struct server;
 
 #define PACKET_TYPE_UNENCRY 0x01
 #define PACKET_TYPE_ENCRY 0x02
@@ -43,31 +44,12 @@ struct method {
 
 #define RAW_PACKET_BUFFER_MAX (SERVER_MAX_PACKETS - sizeof(struct raw_packet_head))
 
-static inline int sizeof_raw_packet(struct raw_packet *packet)
-{
-	return sizeof(struct raw_packet_head) + packet->head.packet_len;
-}
-
-static inline struct raw_packet *malloc_raw_packet(struct server *sv,
-	struct client *ct)
-{
-	return (struct raw_packet *)ct->respond;
-}
-
-static inline int free_raw_packet(struct server *sv, struct client *ct,
-	struct raw_packet *packet)
-{
-	return 0;
-}
-
-static inline int respond_raw_packet(struct server *sv, struct client *ct,
-	struct raw_packet *packet)
-{
-	printf("To %s:%s\n", ct->ipaddr, packet->buffer);
-	write(ct->fd, (void *)packet, sizeof_raw_packet(packet));
-	return 0;
-}
-
+int sizeof_raw_packet(struct raw_packet *packet);
+struct raw_packet *malloc_raw_packet(struct server *sv, struct client *ct);
+int free_raw_packet(struct server *sv, struct client *ct,
+	struct raw_packet *packet);
+int respond_raw_packet(struct server *sv, struct client *ct,
+	struct raw_packet *packet);
 int build_not_found_json(struct server *sv, struct client *ct, json_t *json,
 	const char *method);
 int dispose_packet(struct server *sv, struct client *ct, struct raw_packet *packet);
