@@ -47,7 +47,8 @@ int json_to_raw_packet(json_t *json, int type, struct raw_packet *packet)
 
 	packet->head.type = type;
 	packet->head.packet_len = json_dumpb(json, packet->buffer, RAW_PACKET_BUFFER_MAX, 0);
-	crc32 = crc32_classic(&crc32_packet->crcdata, packet->head.packet_len);
+	crc32 = crc32_classic(&crc32_packet->crcdata, sizeof_raw_packet(packet) -
+		sizeof(struct crc32_raw_packet));
 	packet->head.crc32 = htonl(crc32);
 	return 0;
 }
