@@ -37,7 +37,6 @@ int test_com_login_seed_request(int socketfd)
 	unsigned char buffer[512];
 	struct crc32_raw_packet *crc32_packet = (struct crc32_raw_packet *)buffer;
 	struct raw_packet *packet = (void *)buffer;
-	uint32_t crc32 = 0;
 	json_t *json = json_object();
 	int ret = 0, i = 0;
 	int raw_packet_size = 0;
@@ -54,7 +53,7 @@ int test_com_login_seed_request(int socketfd)
 		packet->head.type = PACKET_TYPE_UNENCRY;
 
 		raw_packet_size = sizeof(struct raw_packet_head) + packet->head.packet_len;
-		crc32 = crc32_classic(crc32_packet->crcdata, raw_packet_size -
+		packet->head.crc32 = crc32_classic(crc32_packet->crcdata, raw_packet_size -
 			sizeof(struct crc32_raw_packet));
 
 		printf("Write:%s\n", packet->buffer);
@@ -73,7 +72,6 @@ int test_com_login_seed_request(int socketfd)
 int main(int argc, char **argv)
 {
 	int serverfd, ret, port = SERVER_DEFAULT_PORT;
-	uint32_t crc32 = 0;
 	struct sockaddr_in serveraddr, clientaddr;
 	unsigned char buffer[512];
 	struct raw_packet *packet = (void *)buffer;
@@ -111,9 +109,8 @@ int main(int argc, char **argv)
 	printf("json:%s\n", packet->buffer);
 
 	raw_packet_size = sizeof(struct raw_packet_head) + packet->head.packet_len;
-	crc32 = crc32_classic(crc32_packet->crcdata, raw_packet_size -
+	packet->head.crc32 = crc32_classic(crc32_packet->crcdata, raw_packet_size -
 		sizeof(struct crc32_raw_packet));
-	packet->head.crc32 = htonl(crc32);
 	ret = write(serverfd, buffer, packet->head.packet_len + sizeof(struct raw_packet_head));
 
 	memset(buffer, 0, sizeof(buffer));
