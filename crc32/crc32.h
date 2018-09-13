@@ -4,7 +4,7 @@
 
 #define CRC32_INIT	0xffffffff
 
-uint32_t crc32_update(const void * buf, unsigned int size, uint32_t crc);
+uint32_t crc32_update(const char *buf, unsigned int len, uint32_t crc32val);
 
 
 static inline uint32_t crc32_classic(const void * buf, unsigned int size)

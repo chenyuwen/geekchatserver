@@ -53,15 +53,12 @@ static const uint32_t crc32_tab[] = {
 };
 
 
-uint32_t crc32_update(const void * buf, unsigned int size, uint32_t crc)
+uint32_t crc32_update(const char *buf, unsigned int len, uint32_t crc32val)
 {
-	const uint8_t * data = buf;
+	int i = 0;
 
-	while ( size > 0 )
-	{
-		crc = crc32_tab[ (crc ^ *data++) & 0xff] ^(crc >> 8);
-		size--;
+	for (i = 0;  i < len;  i++) {
+		crc32val = crc32_tab[(crc32val ^ buf[i]) & 0xFF] ^ ((crc32val >> 8) & 0x00FFFFFF);
 	}
-
-	return  crc;
+	return labs(crc32val ^ 0xFFFFFFFF);
 }
