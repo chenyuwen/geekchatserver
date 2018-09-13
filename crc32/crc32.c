@@ -58,5 +58,5 @@ uint32_t crc32_update(const char *buf, unsigned int len, uint32_t crc32val)
 	for (i = 0;  i < len;  i++) {
 		crc32val = crc32_tab[(crc32val ^ buf[i]) & 0xFF] ^ ((crc32val >> 8) & 0x00FFFFFF);
 	}
-	return labs(crc32val ^ 0xFFFFFFFF);
+	return crc32val;
 }

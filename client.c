@@ -40,6 +40,7 @@ int test_com_login_seed_request(int socketfd)
 	uint32_t crc32 = 0;
 	json_t *json = json_object();
 	int ret = 0, i = 0;
+	int raw_packet_size = 0;
 	unsigned char names[][20] = {"", "lisi", "lisi", "zhangsan"};
 
 	memset(buffer, 0, sizeof(buffer));
@@ -52,8 +53,9 @@ int test_com_login_seed_request(int socketfd)
 		packet->head.packet_len = json_dumpb(json, packet->buffer, 100, 0);
 		packet->head.type = PACKET_TYPE_UNENCRY;
 
-		crc32 = crc32_classic(&crc32_packet->crcdata, packet->head.packet_len);
-		packet->head.crc32 = htonl(crc32);
+		raw_packet_size = sizeof(struct raw_packet_head) + packet->head.packet_len;
+		crc32 = crc32_classic(crc32_packet->crcdata, raw_packet_size -
+			sizeof(struct crc32_raw_packet));
 
 		printf("Write:%s\n", packet->buffer);
 		ret = write(socketfd, buffer, packet->head.packet_len + sizeof(struct raw_packet_head));
@@ -77,6 +79,7 @@ int main(int argc, char **argv)
 	struct raw_packet *packet = (void *)buffer;
 	struct crc32_raw_packet *crc32_packet = (struct crc32_raw_packet *)buffer;
 	json_t *json;
+	int raw_packet_size = 0;
 
 	if(argc >= 2) {
 		port = atoi(argv[1]);
@@ -107,7 +110,9 @@ int main(int argc, char **argv)
 	packet->head.packet_len = json_dumpb(json, packet->buffer, 100, 0);
 	printf("json:%s\n", packet->buffer);
 
-	crc32 = crc32_classic(&crc32_packet->crcdata, packet->head.packet_len);
+	raw_packet_size = sizeof(struct raw_packet_head) + packet->head.packet_len;
+	crc32 = crc32_classic(crc32_packet->crcdata, raw_packet_size -
+		sizeof(struct crc32_raw_packet));
 	packet->head.crc32 = htonl(crc32);
 	ret = write(serverfd, buffer, packet->head.packet_len + sizeof(struct raw_packet_head));
 

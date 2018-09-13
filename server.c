@@ -110,10 +110,11 @@ int try_make_net_packet(struct server *sv, struct client *ct)
 		return 0;
 	}
 
-	crc32 = crc32_classic(&crc32_packet->crcdata, raw_packet_size -
+	crc32 = crc32_classic(crc32_packet->crcdata, raw_packet_size -
 		sizeof(struct crc32_raw_packet));
-	if(crc32 != ntohl(packet->head.crc32)) {
+	if(crc32 != packet->head.crc32) {
 		printf("CRC error.\n");
+		if(sv->dump) dump_buffer((void *)&crc32, sizeof(crc32));
 		if(sv->dump) dump_buffer((void *)packet, raw_packet_size);
 		return -1;
 	}
