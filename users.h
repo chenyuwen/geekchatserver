@@ -7,9 +7,11 @@
 struct user {
 	char token[SERVER_TOKEN_LENS + 1];
 	char seed[SERVER_SEED_LENS + 1];
-	char username[20];
+	char username[SERVER_USERNAME_LENS + 1];
+	char password[SERVER_PASSWORD_LENS + 1];
 	int is_online;
 	int use_cnt;
+	int is_seed_not_empty;
 };
 
 int init_users_map(struct server *sv);

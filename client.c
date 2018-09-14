@@ -69,6 +69,41 @@ int test_com_login_seed_request(int socketfd)
 	return 0;
 }
 
+int test_com_login_request(int socketfd)
+{
+	unsigned char buffer[512];
+	struct crc32_raw_packet *crc32_packet = (struct crc32_raw_packet *)buffer;
+	struct raw_packet *packet = (void *)buffer;
+	json_t *json = json_object();
+	int ret = 0, i = 0;
+	int raw_packet_size = 0;
+	unsigned char names[][20] = {"", "lisi", "lisi", "zhangsan"};
+
+	memset(buffer, 0, sizeof(buffer));
+	json_object_set_new(json, "method", json_string("com.login.seed.request"));
+
+	json_object_set_new(json, "username", json_string(names[i]));
+
+	memset(buffer, 0, sizeof(buffer));
+	packet->head.packet_len = json_dumpb(json, packet->buffer, 100, 0);
+	packet->head.type = PACKET_TYPE_UNENCRY;
+
+	raw_packet_size = sizeof(struct raw_packet_head) + packet->head.packet_len;
+	packet->head.crc32 = crc32_classic(crc32_packet->crcdata, raw_packet_size -
+		sizeof(struct crc32_raw_packet));
+
+	printf("Write:%s\n", packet->buffer);
+	ret = write(socketfd, buffer, packet->head.packet_len + sizeof(struct raw_packet_head));
+
+	memset(buffer, 0, sizeof(buffer));
+	ret = read(socketfd, buffer, 200);
+	printf("Read:%s\n", packet->buffer);
+
+	json_object_del(json, "username");
+	json_delete(json);
+	return 0;
+}
+
 int main(int argc, char **argv)
 {
 	int serverfd, ret, port = SERVER_DEFAULT_PORT;
@@ -118,6 +153,7 @@ int main(int argc, char **argv)
 	printf("json:%s\n", packet->buffer);
 
 	test_com_login_seed_request(serverfd);
+	test_com_login_request(serverfd);
 	printf("close\n");
 	close(serverfd);
 	json_delete(json);

@@ -5,6 +5,7 @@
 #include "server.h"
 #include "packet.h"
 #include "mysql_connector.h"
+#include "mlog.h"
 
 int mysql_test_connection(struct server *sv)
 {
@@ -14,17 +15,17 @@ int mysql_test_connection(struct server *sv)
 
 	ret = mysql_query(config->mysql, "show tables");
 	if(ret < 0) {
-		printf("mysql_query: %s\n", mysql_error(config->mysql));
+		mlog("mysql_query: %s\n", mysql_error(config->mysql));
 		return -mysql_errno(config->mysql);
 	}
 
 	result = mysql_use_result(config->mysql);
 	if(result == NULL) {
-		printf("mysql_use_result: %s\n", mysql_error(config->mysql));
+		mlog("mysql_use_result: %s\n", mysql_error(config->mysql));
 		return -mysql_errno(config->mysql);
 	}
 
-	printf("The mysql is readly\n");
+	mlog("The mysql is readly\n");
 	mysql_free_result(result);
 	return 0;
 }
@@ -39,7 +40,7 @@ int init_mysql(struct server *sv)
 	mysql_real_connect(config->mysql, config->serverip, config->username,
 		config->password, config->database_name, 0, NULL, 0);
 	if(-mysql_errno(config->mysql) < 0) {
-		printf("mysql_real_connect: %s\n", mysql_error(config->mysql));
+		mlog("mysql_real_connect: %s\n", mysql_error(config->mysql));
 		return -mysql_errno(config->mysql);
 	}
 	return mysql_test_connection(sv);

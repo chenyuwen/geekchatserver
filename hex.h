@@ -1,6 +1,7 @@
 #ifndef __HEX_H__
 #define __HEX_H__
 #include <stdio.h>
+#include "mlog.h"
 
 static inline int hex_to_ascii(char *dst, unsigned char *src, int srclen)
 {
@@ -18,15 +19,15 @@ static inline int dump_buffer(const unsigned char *buffer, int len)
 	int i = 0;
 	for(i=0; i<len; i++) {
 		if(buffer[i] <= 0xF) {
-			printf("0x0%X ", buffer[i]);
+			mlog("0x0%X ", buffer[i]);
 		} else {
-			printf("0x%X ", buffer[i]);
+			mlog("0x%X ", buffer[i]);
 		}
 		if((i % 20) == 19) {
-			printf("\n");
+			mlog("\n");
 		}
 	}
-	printf("\n");
+	mlog("\n");
 	return 0;
 }
 

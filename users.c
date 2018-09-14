@@ -9,6 +9,7 @@
 #include "server.h"
 #include "users.h"
 #include "err.h"
+#include "mlog.h"
 
 int init_users_map(struct server *sv)
 {
@@ -28,7 +29,7 @@ int user_put(struct server *sv, struct user *usr)
 {
 	usr->use_cnt--;
 	if(usr->use_cnt == 0) {
-		printf("Free user:%s\n", usr->username);
+		mlog("Free user:%s\n", usr->username);
 		hashmap_remove(sv->users_map, usr->username);
 		free(usr);
 	}
@@ -47,13 +48,13 @@ int get_user_by_name_from_mysql(struct server *sv, const char *username, struct 
 	snprintf(query, sizeof(query),"select * from users where username = '%s'", username);
 	ret = mysql_query(config->mysql, query);
 	if(ret < 0) {
-		printf("mysql_query: %s\n", mysql_error(config->mysql));
+		mlog("mysql_query: %s\n", mysql_error(config->mysql));
 		return -mysql_errno(config->mysql);
 	}
 
 	result = mysql_store_result(config->mysql);
 	if(result == NULL) {
-		printf("mysql_store_result: %s\n", mysql_error(config->mysql));
+		mlog("mysql_store_result: %s\n", mysql_error(config->mysql));
 		return -mysql_errno(config->mysql);
 	}
 
@@ -61,7 +62,7 @@ int get_user_by_name_from_mysql(struct server *sv, const char *username, struct 
 		ret = -1;
 		goto out;
 	} else if(mysql_num_rows(result) >= 2) {
-		printf("Error: The username '%s' was the same.\n", username);
+		mlog("Error: The username '%s' was the same.\n", username);
 		ret = -1;
 		goto out;
 	}
@@ -77,7 +78,7 @@ int get_user_by_name_from_mysql(struct server *sv, const char *username, struct 
 	strncpy(tmp->username, username, sizeof(tmp->username));
 	ret = hashmap_put(sv->users_map, tmp->username, tmp);
 	if(ret != MAP_OK) {
-		printf("Error: The user %s had been in the hashtable\n", username);
+		mlog("Error: The user %s had been in the hashtable\n", username);
 		free(tmp);
 		ret = -1;
 		goto out;

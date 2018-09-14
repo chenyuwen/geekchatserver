@@ -9,7 +9,14 @@
 #define URANDOM_FILE_DIR "/dev/urandom"
 #define SERVER_TOKEN_LENS 20
 #define SERVER_SEED_LENS 20
+#define SHA256_LENS (256 / 8)
+#define SERVER_USERNAME_LENS 20
+#define SERVER_PASSWORD_LENS SHA256_LENS
 #define SERVER_DUMP_BUFFER 1
+#define SERVER_STDOUT_PATH1 "/var/log/geekchat_stdout.log"
+#define SERVER_STDOUT_PATH2 "/tmp/geekchat_stdout.log"
+#define SERVER_STDERR_PATH1 "/var/log/geekchat_stderr.log"
+#define SERVER_STDERR_PATH2 "/tmp/geekchat_stderr.log"
 
 static struct mysql_config default_mysql_config = {
 	.serverip = "127.0.0.1",

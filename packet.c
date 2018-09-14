@@ -15,6 +15,7 @@
 #include "server_configs.h"
 #include "packet.h"
 #include "server.h"
+#include "mlog.h"
 
 int build_not_found_json(struct server *sv, struct client *ct, json_t *json,
 	const char *method)
@@ -75,17 +76,17 @@ int dispose_packet(struct server *sv, struct client *ct, struct raw_packet *pack
 
 	json = json_loadb(packet->buffer, strlen(packet->buffer), 0, &json_err);
 	if(json == NULL) {
-		printf("json_loadb failed.\n");
+		mlog("json_loadb failed.\n");
 		return -1;
 	}
 
 	method_json = json_object_get(json, "method");
 	tmp = json_string_value(method_json);
 	if(tmp == NULL) {
-		printf("the methods is null.\n");
+		mlog("the methods is null.\n");
 		return -1;
 	}
-	printf("From %s:%s\n", ct->ipaddr, packet->buffer);
+	mlog("From %s:%s\n", ct->ipaddr, packet->buffer);
 	ret = call_method(sv, ct, json, tmp);
 	json_delete(json);
 	return ret;
@@ -111,7 +112,7 @@ int free_raw_packet(struct server *sv, struct client *ct,
 int respond_raw_packet(struct server *sv, struct client *ct,
 	struct raw_packet *packet)
 {
-	printf("To %s:%s\n", ct->ipaddr, packet->buffer);
+	mlog("To %s:%s\n", ct->ipaddr, packet->buffer);
 	write(ct->fd, (void *)packet, sizeof_raw_packet(packet));
 	return 0;
 }

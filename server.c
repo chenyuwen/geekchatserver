@@ -18,6 +18,7 @@
 #include "users.h"
 #include "random_pool.h"
 #include "hex.h"
+#include "mlog.h"
 
 #define addr_ntoa(addr)  (inet_ntoa(((struct sockaddr_in *)(addr))->sin_addr))
 
@@ -51,7 +52,7 @@ int accept_new_client(struct server *sv)
 	snprintf(ct->name, sizeof(ct->name), "%d", ct->fd);
 	/*TODO: lock*/
 	if(hashmap_remove(sv->clients_map, ct->name) == MAP_OK) {
-		printf("failed.\n");
+		mlog("failed.\n");
 		return -1;
 	}
 	hashmap_put(sv->clients_map, ct->name, ct);
@@ -64,7 +65,7 @@ int accept_new_client(struct server *sv)
 		return errno;
 	}
 	strcpy(ct->ipaddr, addr_ntoa(&ct->addr));
-	printf("New client:%s\n", ct->ipaddr);
+	mlog("New client:%s\n", ct->ipaddr);
 
 	return 0;
 }
@@ -72,7 +73,7 @@ int accept_new_client(struct server *sv)
 int free_client_socket(struct server *sv, struct client *ct)
 {
 	int ret = 0;
-	printf("Close the client:%s\n", ct->ipaddr);
+	mlog("Close the client:%s\n", ct->ipaddr);
 	ret = epoll_ctl(sv->epollfd, EPOLL_CTL_DEL, ct->fd, NULL);
 	if(ret < 0) {
 		perror("epoll_ctl");
@@ -98,14 +99,14 @@ int try_make_net_packet(struct server *sv, struct client *ct)
 	struct crc32_raw_packet *crc32_packet = (struct crc32_raw_packet *)ct->buffer;
 
 	if(ct->buffer_offset < sizeof(struct raw_packet_head)) {
-		printf("It is not a packet.\n");
+		mlog("It is not a packet.\n");
 		if(sv->dump) dump_buffer((void *)packet, ct->buffer_offset);
 		return 0;
 	}
 
 	raw_packet_size = sizeof_raw_packet(packet);
 	if(ct->buffer_offset < raw_packet_size) {
-		printf("It is not a packet.\n");
+		mlog("It is not a packet.\n");
 		if(sv->dump) dump_buffer((void *)packet, ct->buffer_offset);
 		return 0;
 	}
@@ -113,7 +114,7 @@ int try_make_net_packet(struct server *sv, struct client *ct)
 	crc32 = crc32_classic(crc32_packet->crcdata, raw_packet_size -
 		sizeof(struct crc32_raw_packet));
 	if(crc32 != packet->head.crc32) {
-		printf("CRC error.\n");
+		mlog("CRC error.\n");
 		if(sv->dump) dump_buffer((void *)&crc32, sizeof(crc32));
 		if(sv->dump) dump_buffer((void *)packet, raw_packet_size);
 		return -1;
@@ -140,7 +141,7 @@ int client_socket(struct server *sv, struct epoll_event *event)
 	ret = hashmap_get(sv->clients_map, name, (any_t *)&ct);
 	/*TODO:unlock*/
 	if(ret != MAP_OK) {
-		printf("Error\n");
+		mlog("Error\n");
 		return -1;
 	}
 
@@ -176,6 +177,7 @@ int main(int argc, char **argv)
 	sv->methods_map = hashmap_new();
 	sv->mysql_config = &default_mysql_config;
 	sv->dump = SERVER_DUMP_BUFFER;
+	init_mlog(sv);
 	init_methods_maps(sv);
 	init_users_map(sv);
 	init_mysql(sv);
