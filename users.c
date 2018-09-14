@@ -76,6 +76,7 @@ int get_user_by_name_from_mysql(struct server *sv, const char *username, struct 
 
 	memset(tmp, 0, sizeof(*tmp));
 	row = mysql_fetch_row(result);
+	tmp->usrid = atoi(row[0]);
 	strncpy(tmp->username, row[1], SERVER_USERNAME_LENS);
 	strncpy(tmp->password, row[2], SERVER_PASSWORD_LENS);
 	if(sv->dump) mlog("usrid:%s, usrname:%s, password:%s\n", row[0],

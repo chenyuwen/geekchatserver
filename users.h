@@ -1,10 +1,12 @@
 #ifndef __USER_H__
 #define __USER_H__
 
+#include <stdint.h>
 #include "server.h"
 #include "server_configs.h"
 
 struct user {
+	uint32_t usrid;
 	char token[SERVER_TOKEN_LENS + 1];
 	char seed[SERVER_SEED_LENS + 1];
 	char username[SERVER_USERNAME_LENS + 1];

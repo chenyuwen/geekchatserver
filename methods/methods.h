@@ -8,6 +8,7 @@
 extern int method_com_hello_request(struct server *sv, struct client *ct, json_t *json);
 extern int method_com_login_seed_request(struct server *sv, struct client *ct, json_t *json);
 extern int method_com_login_request(struct server *sv, struct client *ct, json_t *json);
+extern int method_com_message_sendto_request(struct server *sv, struct client *ct, json_t *json);
 
 static struct method methods[] = {
 	{
@@ -21,6 +22,10 @@ static struct method methods[] = {
 	{
 		"com.login.request",
 		method_com_login_request,
+	},
+	{
+		"com.message.sendto.request",
+		method_com_message_sendto_request,
 	},
 };
 

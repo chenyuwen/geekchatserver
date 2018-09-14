@@ -64,7 +64,7 @@ int test_com_login_request(int socketfd)
 	json_t *json = json_object();
 	SHA256_CTX ctx;
 	unsigned char crypto_out[256 / 8];
-	unsigned char password[256 / 8] = "lisi";
+	unsigned char password[256 / 8] = "root";
 	unsigned char hex_out[256 / 8 * 2 + 1] = {0};
 	const char *seed = NULL;
 	int ret = 0, i = 0;
@@ -73,7 +73,7 @@ int test_com_login_request(int socketfd)
 
 	memset(buffer, 0, sizeof(buffer));
 	json_object_set_new(json, "method", json_string("com.login.seed.request"));
-	json_object_set_new(json, "username", json_string("lisi"));
+	json_object_set_new(json, "username", json_string("root"));
 
 	packet->head.packet_len = json_dumpb(json, packet->buffer, 100, 0);
 	packet->head.type = PACKET_TYPE_UNENCRY;
@@ -107,7 +107,7 @@ int test_com_login_request(int socketfd)
 
 	json = json_object();
 	json_object_set_new(json, "method", json_string("com.login.request"));
-	json_object_set_new(json, "username", json_string("lisi"));
+	json_object_set_new(json, "username", json_string("root"));
 	json_object_set_new(json, "crypto", json_string(hex_out));
 
 	packet->head.packet_len = json_dumpb(json, packet->buffer, 2000, 0);
