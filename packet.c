@@ -72,7 +72,7 @@ int dispose_packet(struct server *sv, struct client *ct, struct raw_packet *pack
 	json_error_t json_err;
 	int ret = 0;
 
-	json = json_loadb(packet->buffer, strlen(packet->buffer), 0, &json_err);
+	json = json_loadb(packet->buffer, packet->head.packet_len, 0, &json_err);
 	if(json == NULL) {
 		mlog("json_loadb failed.\n");
 		return -1;
