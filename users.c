@@ -45,7 +45,8 @@ int get_user_by_name_from_mysql(struct server *sv, const char *username, struct 
 	char query[100];
 	struct user *tmp = NULL;
 
-	snprintf(query, sizeof(query),"select usrid, username, password from users where username = '%s'", username);
+	snprintf(query, sizeof(query),"select usrid, username, password from "
+		"users where username = '%s'", username);
 	ret = mysql_query(config->mysql, query);
 	if(ret < 0) {
 		mlog("mysql_query: %s\n", mysql_error(config->mysql));
@@ -75,9 +76,10 @@ int get_user_by_name_from_mysql(struct server *sv, const char *username, struct 
 
 	memset(tmp, 0, sizeof(*tmp));
 	row = mysql_fetch_row(result);
-	if(sv->dump) mlog("usrid:%s, usrname:%s, password:%s\n", row[0], row[1], row[2]);
 	strncpy(tmp->username, row[1], SERVER_USERNAME_LENS);
 	strncpy(tmp->password, row[2], SERVER_PASSWORD_LENS);
+	if(sv->dump) mlog("usrid:%s, usrname:%s, password:%s\n", row[0],
+		tmp->username, tmp->password);
 	ret = hashmap_put(sv->users_map, tmp->username, tmp);
 	if(ret != MAP_OK) {
 		mlog("Error: The user %s had been in the hashtable\n", username);

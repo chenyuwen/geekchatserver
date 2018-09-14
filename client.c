@@ -64,7 +64,7 @@ int test_com_login_request(int socketfd)
 	json_t *json = json_object();
 	SHA256_CTX ctx;
 	unsigned char crypto_out[256 / 8];
-	unsigned char password[20] = {0};
+	unsigned char password[256 / 8] = "lisi";
 	unsigned char hex_out[256 / 8 * 2 + 1] = {0};
 	const char *seed = NULL;
 	int ret = 0, i = 0;
@@ -94,14 +94,16 @@ int test_com_login_request(int socketfd)
 	/*seed*/
 	json = json_loadb(packet->buffer, packet->head.packet_len, 0, &json_err);
 	seed = json_string_value(json_object_get(json,"seed"));
-	json_delete(json);
 
 	sha256_init(&ctx);
-	sha256_update(&ctx, seed, 20);
-	sha256_update(&ctx, password, sizeof(password));
+	sha256_update(&ctx, seed, 32);
+	sha256_update(&ctx, password, 256 / 8);
 	sha256_final(&ctx, crypto_out);
 	hex_to_ascii(hex_out, crypto_out, sizeof(crypto_out));
 	printf("ascii %s\n", hex_out);
+	printf("seed:%s len:%d\n", seed, 32);
+	printf("password:%s len:%d\n", password, 256 / 8);
+	json_delete(json);
 
 	json = json_object();
 	json_object_set_new(json, "method", json_string("com.login.request"));

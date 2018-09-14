@@ -90,7 +90,7 @@ int method_com_login_request(struct server *sv, struct client *ct, json_t *json)
 	sha256_update(&ctx, usr->password, SERVER_PASSWORD_LENS);
 	sha256_final(&ctx, crypto_out);
 	hex_to_ascii(hex_out, crypto_out, sizeof(crypto_out));
-	if(!memcmp(hex_out, crypto, sizeof(hex_out))) {
+	if(memcmp(hex_out, crypto, sizeof(hex_out))) {
 		build_not_found_json(sv, ct, rsp_json, "com.login.failed.respond");
 		user_put(sv, usr);
 		goto respond;
