@@ -3,7 +3,7 @@ all: server client
 server: server.o mysql_connector.o libserver.a libmethods.a libcrypto.a libjansson.a libcrc32.a libhashmap.a
 	gcc $(filter %.o, $^) -lmysqlclient -L./ $(patsubst lib%.a,-l%, $(filter %.a,$^)) -o server
 
-client: libjansson.a libcrc32.a libhashmap.a client.o
+client: libjansson.a libcrc32.a libhashmap.a client.o libcrypto.a
 	gcc $(filter %.o, $^) -L./ $(patsubst lib%.a,-l%, $(filter %.a,$^)) -o client
 
 libserver.a: packet.o users.o mysql_connector.o random_pool.o mlog.o

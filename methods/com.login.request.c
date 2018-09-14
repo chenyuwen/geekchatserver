@@ -75,8 +75,8 @@ int method_com_login_request(struct server *sv, struct client *ct, json_t *json)
 	}
 
 	sha256_init(&ctx);
-	sha256_update(&ctx, usr->seed, SERVER_SEED_LENS / 2);
-	sha256_update(&ctx, usr->password, strlen(usr->password));
+	sha256_update(&ctx, usr->seed, SERVER_SEED_LENS);
+	sha256_update(&ctx, usr->password, SERVER_PASSWORD_LENS);
 	sha256_final(&ctx, crypto_out);
 	hex_to_ascii(hex_out, crypto_out, sizeof(crypto_out));
 	if(!memcmp(hex_out, crypto, sizeof(hex_out))) {

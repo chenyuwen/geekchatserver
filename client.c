@@ -9,28 +9,15 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include "crc32/crc32.h"
+#include "crypto/sha256.h"
 #include "jansson/jansson.h"
 #include "packet.h"
+#include "hex.h"
+#include "mlog.h"
 
 #define SERVER_DEFAULT_PORT 1200
-//#define SERVER_DEFAULT_ADDR "149.28.70.170"
-#define SERVER_DEFAULT_ADDR "127.0.0.1"
-
-int dump_buffer(const unsigned char *buffer, int len)
-{
-	int i = 0;
-	for(i=0; i<len; i++) {
-		if(buffer[i] <= 0xF) {
-			printf("0x0%X ", buffer[i]);
-		} else {
-			printf("0x%X ", buffer[i]);
-		}
-		if((i % 20) == 19) {
-			printf("\n");
-		}
-	}
-	return 0;
-}
+#define SERVER_DEFAULT_ADDR "149.28.70.170"
+//#define SERVER_DEFAULT_ADDR "127.0.0.1"
 
 int test_com_login_seed_request(int socketfd)
 {
@@ -75,16 +62,19 @@ int test_com_login_request(int socketfd)
 	struct crc32_raw_packet *crc32_packet = (struct crc32_raw_packet *)buffer;
 	struct raw_packet *packet = (void *)buffer;
 	json_t *json = json_object();
+	SHA256_CTX ctx;
+	unsigned char crypto_out[256 / 8];
+	unsigned char password[20] = {0};
+	unsigned char hex_out[256 / 8 * 2 + 1] = {0};
+	const char *seed = NULL;
 	int ret = 0, i = 0;
 	int raw_packet_size = 0;
-	unsigned char names[][20] = {"", "lisi", "lisi", "zhangsan"};
+	json_error_t json_err;
 
 	memset(buffer, 0, sizeof(buffer));
 	json_object_set_new(json, "method", json_string("com.login.seed.request"));
+	json_object_set_new(json, "username", json_string("lisi"));
 
-	json_object_set_new(json, "username", json_string(names[i]));
-
-	memset(buffer, 0, sizeof(buffer));
 	packet->head.packet_len = json_dumpb(json, packet->buffer, 100, 0);
 	packet->head.type = PACKET_TYPE_UNENCRY;
 
@@ -94,13 +84,44 @@ int test_com_login_request(int socketfd)
 
 	printf("Write:%s\n", packet->buffer);
 	ret = write(socketfd, buffer, packet->head.packet_len + sizeof(struct raw_packet_head));
+	json_delete(json);
 
+	/*Read*/
 	memset(buffer, 0, sizeof(buffer));
 	ret = read(socketfd, buffer, 200);
 	printf("Read:%s\n", packet->buffer);
 
-	json_object_del(json, "username");
+	/*seed*/
+	json = json_loadb(packet->buffer, packet->head.packet_len, 0, &json_err);
+	seed = json_string_value(json_object_get(json,"seed"));
 	json_delete(json);
+
+	sha256_init(&ctx);
+	sha256_update(&ctx, seed, 20);
+	sha256_update(&ctx, password, sizeof(password));
+	sha256_final(&ctx, crypto_out);
+	hex_to_ascii(hex_out, crypto_out, sizeof(crypto_out));
+	printf("ascii %s\n", hex_out);
+
+	json = json_object();
+	json_object_set_new(json, "method", json_string("com.login.request"));
+	json_object_set_new(json, "username", json_string("lisi"));
+	json_object_set_new(json, "crypto", json_string(hex_out));
+
+	packet->head.packet_len = json_dumpb(json, packet->buffer, 2000, 0);
+	packet->head.type = PACKET_TYPE_UNENCRY;
+
+	raw_packet_size = sizeof(struct raw_packet_head) + packet->head.packet_len;
+	packet->head.crc32 = crc32_classic(crc32_packet->crcdata, raw_packet_size -
+		sizeof(struct crc32_raw_packet));
+
+	printf("Write:%s\n", packet->buffer);
+	ret = write(socketfd, buffer, packet->head.packet_len + sizeof(struct raw_packet_head));
+	json_delete(json);
+
+	memset(buffer, 0, sizeof(buffer));
+	ret = read(socketfd, buffer, 200);
+	printf("Read:%s\n", packet->buffer);
 	return 0;
 }
 
