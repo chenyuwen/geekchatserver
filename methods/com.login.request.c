@@ -21,6 +21,17 @@
 #include "../mlog.h"
 #include "methods.h"
 
+int build_new_token(struct server *sv, struct user *usr)
+{
+	unsigned char raw_token[SERVER_TOKEN_LENS / 2];
+	int ret = get_random_bytes(&sv->random, raw_token, sizeof(raw_token));
+	if(ret < 0) {
+		return ret;
+	}
+
+	return hex_to_ascii(usr->token, raw_token, sizeof(raw_token));
+}
+
 int method_com_login_request(struct server *sv, struct client *ct, json_t *json)
 {
 	json_error_t json_err;
@@ -85,8 +96,9 @@ int method_com_login_request(struct server *sv, struct client *ct, json_t *json)
 		goto respond;
 	}
 
+	build_new_token(sv, usr);
 	json_object_set_new(rsp_json, "method", json_string("com.login.respond"));
-	json_object_set_new(rsp_json, "appid", json_string("random"));
+	json_object_set_new(rsp_json, "token", json_string(usr->token));
 	json_object_set_new(rsp_json, "status", json_true());
 	user_put(sv, usr);
 

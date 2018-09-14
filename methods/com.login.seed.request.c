@@ -21,17 +21,6 @@
 #include "../mlog.h"
 #include "methods.h"
 
-int build_new_token(struct server *sv, struct user *usr)
-{
-	unsigned char raw_token[SERVER_TOKEN_LENS / 2];
-	int ret = get_random_bytes(&sv->random, raw_token, sizeof(raw_token));
-	if(ret < 0) {
-		return ret;
-	}
-
-	return hex_to_ascii(usr->token, raw_token, sizeof(raw_token));
-}
-
 int build_new_seed(struct server *sv, struct user *usr)
 {
 	unsigned char raw_seed[SERVER_SEED_LENS / 2];
