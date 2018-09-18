@@ -52,7 +52,7 @@ int respond_raw_packet(struct server *sv, struct client *ct,
 	struct raw_packet *packet);
 int build_not_found_json(struct server *sv, struct client *ct, json_t *json,
 	const char *method);
-int dispose_packet(struct server *sv, struct client *ct, struct raw_packet *packet);
+int dispatch_packet(struct server *sv, struct client *ct, struct raw_packet *packet);
 int json_to_raw_packet(json_t *json, int type, struct raw_packet *packet);
 int respond_raw_packet(struct server *sv, struct client *ct, struct raw_packet *packet);
 

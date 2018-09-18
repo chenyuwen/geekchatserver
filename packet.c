@@ -65,7 +65,7 @@ int call_method(struct server *sv, struct client *ct, json_t *json, const char *
 	return handler(sv, ct, json);
 }
 
-int dispose_packet(struct server *sv, struct client *ct, struct raw_packet *packet)
+int dispatch_packet(struct server *sv, struct client *ct, struct raw_packet *packet)
 {
 	json_t *json, *method_json;
 	const char *tmp = NULL;

@@ -119,7 +119,7 @@ int try_make_net_packet(struct server *sv, struct client *ct)
 		if(sv->dump) dump_buffer((void *)packet, raw_packet_size);
 		return -1;
 	}
-	dispose_packet(sv, ct, packet);
+	dispatch_packet(sv, ct, packet);
 
 	ct->buffer_offset -= raw_packet_size;
 	if(ct->buffer_offset > 0) {
