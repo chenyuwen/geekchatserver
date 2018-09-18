@@ -114,13 +114,6 @@ err:
 	return ret;
 }
 
-int get_user_by_token(struct server *sv, struct client *ct)
-{
-	int ret = 0;
-out:
-	return ret;
-}
-
 int get_user_by_name_using_cache(struct server *sv, struct client *ct, const char *username,
 	struct user **usr)
 {
@@ -140,6 +133,7 @@ int get_user_by_name_using_cache(struct server *sv, struct client *ct, const cha
 		ct->usr = NULL;
 		goto err;
 	}
+	user_get(sv, *usr); /*cache*/
 
 out:
 	*usr = ct->usr;
