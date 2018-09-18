@@ -20,6 +20,10 @@
 int build_not_found_json(struct server *sv, struct client *ct, json_t *json,
 	const char *method)
 {
+	json_object_del(json, "method");
+	json_object_del(json, "info");
+	json_object_del(json, "status");
+
 	json_object_set_new(json, "method", json_string(method));
 	json_object_set_new(json, "info", json_string("not_found"));
 	json_object_set_new(json, "status", json_false());

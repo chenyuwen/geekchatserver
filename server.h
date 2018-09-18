@@ -44,6 +44,7 @@ struct server {
 	map_t clients_map;
 	map_t methods_map;
 	map_t users_map;
+	map_t tokens_map;
 };
 
 #endif /*__SERVER_H__*/

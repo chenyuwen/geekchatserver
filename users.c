@@ -99,30 +99,64 @@ int get_user_by_name(struct server *sv, struct client *ct, const char *username,
 	struct user **usr)
 {
 	int ret = 0;
+
+	ret = hashmap_get(sv->users_map, (char *)username, (any_t *)usr);
+	if(usr == NULL || ret != MAP_OK) {
+		ret = get_user_by_name_from_mysql(sv, username, usr);
+		if(ret < 0) {
+			usr = NULL;
+			goto err;
+		}
+		user_get(sv, *usr);
+	}
+
+err:
+	return ret;
+}
+
+int get_user_by_token(struct server *sv, struct client *ct)
+{
+	int ret = 0;
+out:
+	return ret;
+}
+
+int get_user_by_name_using_cache(struct server *sv, struct client *ct, const char *username,
+	struct user **usr)
+{
+	int ret = 0;
 	if(ct->usr != NULL) {
 		ret = strncmp(username, ct->usr->username, sizeof(ct->usr->username));
 		if(ret == 0) {
+			user_get(sv, ct->usr);
 			goto out;
 		}
 		user_put(sv, ct->usr);
 		ct->usr = NULL;
 	}
 
-	ret = hashmap_get(sv->users_map, (char *)username, (any_t *)&ct->usr);
-	if(ct->usr == NULL || ret != MAP_OK) {
-		ret = get_user_by_name_from_mysql(sv, username, &ct->usr);
-		if(ret < 0) {
-			ct->usr = NULL;
-			goto err;
-		}
-		user_get(sv, ct->usr);
+	ret = get_user_by_name(sv, ct, username, &ct->usr);
+	if(ret < 0) {
+		ct->usr = NULL;
+		goto err;
 	}
 
 out:
-	user_get(sv, ct->usr);
-err:
 	*usr = ct->usr;
+err:
 	return ret;
+}
+
+int bind_user(struct server *sv, struct client *ct, struct user *usr)
+{
+	usr->client = ct;
+	return 0;
+}
+
+int unbind_user(struct server *sv, struct client *ct, struct user *usr)
+{
+	usr->client = NULL;
+	return 0;
 }
 
 int json_to_user(struct server *sv, json_t *json)

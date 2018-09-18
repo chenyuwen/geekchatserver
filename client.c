@@ -122,8 +122,28 @@ int test_com_login_request(int socketfd)
 	json_delete(json);
 
 	memset(buffer, 0, sizeof(buffer));
+	ret = read(socketfd, buffer, 1000);
+	printf("Read:%s\n", packet->buffer);
+
+	json = json_object();
+	json_object_set_new(json, "method", json_string("com.message.sendto.request"));
+	json_object_set_new(json, "message", json_string("root"));
+
+	packet->head.packet_len = json_dumpb(json, packet->buffer, 2000, 0);
+	packet->head.type = PACKET_TYPE_UNENCRY;
+
+	raw_packet_size = sizeof(struct raw_packet_head) + packet->head.packet_len;
+	packet->head.crc32 = crc32_classic(crc32_packet->crcdata, raw_packet_size -
+		sizeof(struct crc32_raw_packet));
+
+	printf("Write:%s\n", packet->buffer);
+	ret = write(socketfd, buffer, packet->head.packet_len + sizeof(struct raw_packet_head));
+	json_delete(json);
+
+	memset(buffer, 0, sizeof(buffer));
 	ret = read(socketfd, buffer, 200);
 	printf("Read:%s\n", packet->buffer);
+
 	return 0;
 }
 
