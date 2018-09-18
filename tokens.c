@@ -6,7 +6,7 @@
 
 int init_token(struct server *sv)
 {
-	sv->users_map = hashmap_new();
+	sv->tokens_map = hashmap_new();
 	return 0;
 }
 
