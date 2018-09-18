@@ -91,6 +91,7 @@ int method_com_login_request(struct server *sv, struct client *ct, json_t *json)
 	json_object_set_new(rsp_json, "method", json_string("com.login.respond"));
 	json_object_set_new(rsp_json, "token", json_string(usr->token));
 	json_object_set_new(rsp_json, "status", json_true());
+	usr->is_online = 1;
 	user_put(sv, usr);
 
 respond:
