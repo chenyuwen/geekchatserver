@@ -85,6 +85,7 @@ int free_client_socket(struct server *sv, struct client *ct)
 	hashmap_remove(sv->clients_map, ct->name);
 	/*TODO: unlock*/
 	if(ct->usr != NULL) {
+		free_token(sv, ct->usr);
 		user_put(sv, ct->usr);
 	}
 	close(ct->fd);

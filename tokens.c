@@ -27,7 +27,7 @@ int alloc_new_token(struct server *sv, struct user *usr)
 
 int free_token(struct server *sv, struct user *usr)
 {
-	hashmap_remove(usr, usr->token);
+	hashmap_remove(sv->tokens_map, usr->token);
 	user_put(sv, usr);
 	return 0;
 }

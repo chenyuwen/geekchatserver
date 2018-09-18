@@ -16,8 +16,8 @@
 #include "mlog.h"
 
 #define SERVER_DEFAULT_PORT 1200
-#define SERVER_DEFAULT_ADDR "149.28.70.170"
-//#define SERVER_DEFAULT_ADDR "127.0.0.1"
+//#define SERVER_DEFAULT_ADDR "149.28.70.170"
+#define SERVER_DEFAULT_ADDR "127.0.0.1"
 
 int test_com_login_seed_request(int socketfd)
 {
