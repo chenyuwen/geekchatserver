@@ -4,6 +4,12 @@
 #include "users.h"
 #include "tokens.h"
 
+int init_token(struct server *sv)
+{
+	sv->users_map = hashmap_new();
+	return 0;
+}
+
 int alloc_new_token(struct server *sv, struct user *usr)
 {
 	unsigned char raw_token[SERVER_TOKEN_LENS / 2];
