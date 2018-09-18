@@ -110,6 +110,8 @@ int method_com_message_sendto_request(struct server *sv, struct client *ct, json
 		user_put(sv, to);
 		goto respond;
 	}
+	user_put(sv, from);
+	user_put(sv, to);
 
 respond:
 	json_to_raw_packet(rsp_json, PACKET_TYPE_UNENCRY, packet);
