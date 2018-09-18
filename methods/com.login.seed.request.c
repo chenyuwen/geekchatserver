@@ -60,7 +60,7 @@ int method_com_login_seed_request(struct server *sv, struct client *ct, json_t *
 		build_not_found_json(sv, ct, rsp_json, "com.login.seed.respond");
 		goto respond;
 	}
-	usr->is_seed_not_empty = 1;
+	usr->is_seed_existed = 1;
 	json_object_set_new(rsp_json, "method", json_string("com.login.seed.respond"));
 	json_object_set_new(rsp_json, "seed", json_string(usr->seed));
 	json_object_set_new(rsp_json, "username", json_string(usr->username));

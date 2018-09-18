@@ -61,7 +61,7 @@ int method_com_login_request(struct server *sv, struct client *ct, json_t *json)
 		goto respond;
 	}
 
-	if(!usr->is_seed_not_empty) {
+	if(!usr->is_seed_existed) {
 		mlog("Warning: The user '%s' did out getting the seed.\n", username);
 		build_not_found_json(sv, ct, rsp_json, "com.login.respond");
 		user_put(sv, usr);
@@ -92,6 +92,7 @@ int method_com_login_request(struct server *sv, struct client *ct, json_t *json)
 	json_object_set_new(rsp_json, "token", json_string(usr->token));
 	json_object_set_new(rsp_json, "status", json_true());
 	usr->is_online = 1;
+	usr->is_seed_existed = 0;
 	user_put(sv, usr);
 
 respond:

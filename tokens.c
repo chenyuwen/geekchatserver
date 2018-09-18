@@ -3,6 +3,7 @@
 #include "hex.h"
 #include "users.h"
 #include "tokens.h"
+#include "mlog.h"
 
 int init_token(struct server *sv)
 {
@@ -28,6 +29,7 @@ int alloc_new_token(struct server *sv, struct user *usr)
 int free_token(struct server *sv, struct user *usr)
 {
 	hashmap_remove(sv->tokens_map, usr->token);
+	mlog("free token:%s\n", usr->username);
 	user_put(sv, usr);
 	return 0;
 }

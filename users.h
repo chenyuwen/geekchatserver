@@ -13,7 +13,7 @@ struct user {
 	char password[SERVER_PASSWORD_LENS + 1];
 	int is_online;
 	int use_cnt;
-	int is_seed_not_empty;
+	int is_seed_existed;
 	struct client *client;
 };
 
