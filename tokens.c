@@ -20,7 +20,7 @@ int alloc_new_token(struct server *sv, struct user *usr)
 
 	/*TODO: check the token*/
 	hex_to_ascii(usr->token, raw_token, sizeof(raw_token));
-	hashmap_put(sv->tokens_map, usr->token, &usr);
+	hashmap_put(sv->tokens_map, usr->token, usr);
 	user_get(sv, usr);
 	return ret;
 }
@@ -34,6 +34,8 @@ int free_token(struct server *sv, struct user *usr)
 
 int get_usr_by_token(struct server *sv, const char *token, struct user **usr)
 {
-	return hashmap_get(sv->tokens_map, (char *)token, (any_t *)usr);
+	int ret = hashmap_get(sv->tokens_map, (char *)token, (any_t *)usr);
+	user_get(sv, *usr);
+	return ret;
 }
 

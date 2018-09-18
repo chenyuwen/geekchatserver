@@ -32,6 +32,7 @@ int send_message_to(struct server *sv, struct user *from, struct user *to,
 	json_object_set_new(rsp_json, "token", json_string(to->token));
 	json_object_set_new(rsp_json, "message", json_string(message));
 
+	printf("from:%s\n", from->username);
 respond:
 	json_to_raw_packet(rsp_json, PACKET_TYPE_UNENCRY, packet);
 	respond_raw_packet(sv, to->client, packet);
@@ -55,7 +56,7 @@ int method_com_message_sendto_request(struct server *sv, struct client *ct, json
 	json_object_set_new(rsp_json, "status", json_true());
 
 	token = json_string_value(json_object_get(json, "token"));
-	if(sendto == NULL) {
+	if(token == NULL) {
 		mlog("Warning: The message did not have token.\n");
 		build_not_found_json(sv, ct, rsp_json, "com.message.sendto.respond");
 		goto respond;

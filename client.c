@@ -66,6 +66,7 @@ int test_com_login_request(int socketfd)
 	unsigned char crypto_out[256 / 8];
 	unsigned char password[256 / 8] = "root";
 	unsigned char hex_out[256 / 8 * 2 + 1] = {0};
+	unsigned char token[100] = {0};
 	const char *seed = NULL;
 	int ret = 0, i = 0;
 	int raw_packet_size = 0;
@@ -125,9 +126,15 @@ int test_com_login_request(int socketfd)
 	ret = read(socketfd, buffer, 1000);
 	printf("Read:%s\n", packet->buffer);
 
+	/*seed*/
+	json = json_loadb(packet->buffer, packet->head.packet_len, 0, &json_err);
+	strcpy(token, json_string_value(json_object_get(json,"token")));
+
 	json = json_object();
 	json_object_set_new(json, "method", json_string("com.message.sendto.request"));
-	json_object_set_new(json, "message", json_string("root"));
+	json_object_set_new(json, "message", json_string("message mmkklklkkjkk"));
+	json_object_set_new(json, "token", json_string(token));
+	json_object_set_new(json, "sendto", json_string("root"));
 
 	packet->head.packet_len = json_dumpb(json, packet->buffer, 2000, 0);
 	packet->head.type = PACKET_TYPE_UNENCRY;
