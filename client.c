@@ -263,7 +263,6 @@ int main(int argc, char **argv)
 	if(login_to_server(&ct) < 0) {
 		goto out;
 	}
-	send_message(&ct, "root", "hello root");
 
 	epollfd = epoll_create(MAX_EVENTS);
 	event.events = EPOLLIN | EPOLLET;
