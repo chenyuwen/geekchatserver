@@ -107,8 +107,8 @@ int get_user_by_name(struct server *sv, struct client *ct, const char *username,
 			usr = NULL;
 			goto err;
 		}
-		user_get(sv, *usr);
 	}
+	user_get(sv, *usr);
 
 err:
 	return ret;
