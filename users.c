@@ -133,7 +133,7 @@ int get_user_by_name_using_cache(struct server *sv, struct client *ct, const cha
 		ct->usr = NULL;
 		goto err;
 	}
-	user_get(sv, *usr); /*cache*/
+	user_get(sv, ct->usr); /*cache*/
 
 out:
 	*usr = ct->usr;
