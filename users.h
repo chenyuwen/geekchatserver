@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include "server.h"
 #include "server_configs.h"
+#include "friends.h"
 
 struct user {
 	uint32_t uid;
@@ -15,6 +16,7 @@ struct user {
 	int use_cnt;
 	int is_seed_existed;
 	struct client *client;
+	struct friends friends;
 };
 
 int init_users_map(struct server *sv);
