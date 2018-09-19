@@ -19,7 +19,7 @@
 #define SERVER_DEFAULT_PORT 1200
 #define SERVER_DEFAULT_ADDR "149.28.70.170"
 //#define SERVER_DEFAULT_ADDR "127.0.0.1"
-#define CLIENT_DUMP 1
+#define CLIENT_DUMP 0
 #define STDIN 0
 
 struct client_struct {
@@ -198,9 +198,11 @@ int list_my_friends(struct client_struct *ct)
 
 	recv_json_object(ct, &json);
 	array = json_object_get(json, "friends");
+	printf("Friends:\n");
 	json_array_foreach(array, i, obj) {
-		printf("%s\n", json_string_value(obj));
+		printf("%s\t", json_string_value(obj));
 	}
+	printf("\n");
 	json_delete(json);
 	return 0;
 }
