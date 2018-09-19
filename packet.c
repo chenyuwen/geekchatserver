@@ -102,6 +102,7 @@ int sizeof_raw_packet(struct raw_packet *packet)
 struct raw_packet *malloc_raw_packet(struct server *sv,
 	struct client *ct)
 {
+	if(sv->dump) memset(ct->respond, 0, sizeof(ct->respond));
 	return (struct raw_packet *)ct->respond;
 }
 
