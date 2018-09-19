@@ -25,7 +25,7 @@ int mysql_test_connection(struct server *sv)
 		return -mysql_errno(config->mysql);
 	}
 
-	mlog("The mysql is readly\n");
+	mlog("The mysql is ready\n");
 	mysql_free_result(result);
 	return 0;
 }
