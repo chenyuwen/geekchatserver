@@ -19,7 +19,7 @@
 #define SERVER_DEFAULT_PORT 1200
 #define SERVER_DEFAULT_ADDR "149.28.70.170"
 //#define SERVER_DEFAULT_ADDR "127.0.0.1"
-#define CLIENT_DUMP 0
+#define CLIENT_DUMP 1
 #define STDIN 0
 
 struct client_struct {
@@ -31,59 +31,79 @@ struct client_struct {
 	unsigned char recv_buffer[4096], send_buffer[4096];
 };
 
-int login_to_server(struct client_struct *ct)
+int recv_json_object(struct client_struct *ct, json_t **json)
 {
-	json_t *recv_json = NULL;
-	json_t *send_json = json_object();
-	json_error_t json_err;
-	int ret = 0, raw_packet_size = 0;
-	unsigned char crypto_out[256 / 8];
-	unsigned char hex_out[256 / 8 * 2 + 1] = {0};
-	const char *recv_seed = NULL, *recv_token = NULL;
-	SHA256_CTX ctx;
-	struct crc32_raw_packet *recv_crc32_packet = (struct crc32_raw_packet *)ct->recv_buffer;
 	struct raw_packet *recv_packet = (void *)ct->recv_buffer;
+	json_t *recv_json = NULL;
+	json_error_t json_err;
+	int ret = 0;
+	const char *from, *message;
 
-	struct crc32_raw_packet *send_crc32_packet = (struct crc32_raw_packet *)ct->send_buffer;
-	struct raw_packet *send_packet = (void *)ct->send_buffer;
-
-	/*Seed send*/
-	memset(ct->send_buffer, 0, sizeof(ct->send_buffer));
-	json_object_set_new(send_json, "method", json_string("com.login.seed.request"));
-	json_object_set_new(send_json, "username", json_string(ct->username));
-
-	send_packet->head.packet_len = json_dumpb(send_json, send_packet->buffer, sizeof(ct->send_buffer) -
-		sizeof(struct raw_packet_head), 0);
-	json_delete(send_json);
-	send_packet->head.type = PACKET_TYPE_UNENCRY;
-
-	raw_packet_size = sizeof(struct raw_packet_head) + send_packet->head.packet_len;
-	send_packet->head.crc32 = crc32_classic(send_crc32_packet->crcdata, raw_packet_size -
-		sizeof(struct crc32_raw_packet));
-
-	if(CLIENT_DUMP) printf("%s\n", send_packet->buffer);
-	ret = write(ct->fd, (void *)send_packet, send_packet->head.packet_len + sizeof(struct raw_packet_head));
-	if(ret < 0) {
-		perror("write");
-		goto out;
-	}
-
-	/*Seed recv*/
-	memset(ct->recv_buffer, 0, sizeof(ct->recv_buffer));
+	if(CLIENT_DUMP) memset(ct->recv_buffer, 0, sizeof(ct->recv_buffer));
 	ret = read(ct->fd, ct->recv_buffer, sizeof(ct->recv_buffer));
 	if(ret < 0) {
-		perror("read");
+		perror("read\n");
 		goto out;
 	}
 
 	if(CLIENT_DUMP) printf("%s\n", recv_packet->buffer);
 	recv_json = json_loadb(recv_packet->buffer, recv_packet->head.packet_len, 0, &json_err);
 	if(recv_json == NULL) {
-		printf("It is not a json\n");
+		printf("It is not a json.\n");
 		ret = -1;
 		goto out;
 	}
+	*json = recv_json;
 
+out:
+	return ret;
+}
+
+int send_json_object(struct client_struct *ct, json_t *json)
+{
+	struct raw_packet *send_packet = (void *)ct->send_buffer;
+	struct crc32_raw_packet *crc32_send_packet = (void *)ct->send_buffer;
+	int ret = 0, raw_packet_size = 0;
+
+	if(CLIENT_DUMP) memset(ct->send_buffer, 0, sizeof(ct->send_buffer));
+	send_packet->head.packet_len = json_dumpb(json, send_packet->buffer, sizeof(ct->send_buffer) -
+		sizeof(struct raw_packet_head), 0);
+	send_packet->head.type = PACKET_TYPE_UNENCRY;
+
+	raw_packet_size = sizeof(struct raw_packet_head) + send_packet->head.packet_len;
+	send_packet->head.crc32 = crc32_classic(crc32_send_packet->crcdata, raw_packet_size -
+		sizeof(struct crc32_raw_packet));
+
+	if(CLIENT_DUMP) printf("%s\n", send_packet->buffer);
+	ret = write(ct->fd, ct->send_buffer, send_packet->head.packet_len + sizeof(struct raw_packet_head));
+	if(ret < 0) {
+		perror("write");
+	}
+	return ret;
+}
+
+int login_to_server(struct client_struct *ct)
+{
+	json_t *recv_json = NULL;
+	json_t *send_json = json_object();
+	int ret = 0;
+	unsigned char crypto_out[256 / 8];
+	unsigned char hex_out[256 / 8 * 2 + 1] = {0};
+	const char *recv_seed = NULL, *recv_token = NULL;
+	SHA256_CTX ctx;
+
+	/*Seed send*/
+	memset(ct->send_buffer, 0, sizeof(ct->send_buffer));
+	json_object_set_new(send_json, "method", json_string("com.login.seed.request"));
+	json_object_set_new(send_json, "username", json_string(ct->username));
+	send_json_object(ct, send_json);
+	json_delete(send_json);
+
+	/*Seed recv*/
+	if(recv_json_object(ct, &recv_json) < 0) {
+		ret = -1;
+		goto out;
+	}
 	recv_seed = json_string_value(json_object_get(recv_json, "seed"));
 	if(recv_seed == NULL) {
 		printf("The seed attr did not in json\n");
@@ -102,36 +122,12 @@ int login_to_server(struct client_struct *ct)
 	json_object_set_new(send_json, "method", json_string("com.login.request"));
 	json_object_set_new(send_json, "crypto", json_string(hex_out));
 	json_object_set_new(send_json, "username", json_string(ct->username));
-
-	send_packet->head.packet_len = json_dumpb(send_json, send_packet->buffer, sizeof(ct->send_buffer) -
-		sizeof(struct raw_packet_head), 0);
+	send_json_object(ct, send_json);
 	json_delete(send_json);
-	send_packet->head.type = PACKET_TYPE_UNENCRY;
-
-	raw_packet_size = sizeof(struct raw_packet_head) + send_packet->head.packet_len;
-	send_packet->head.crc32 = crc32_classic(send_crc32_packet->crcdata, raw_packet_size -
-		sizeof(struct crc32_raw_packet));
-
-	if(CLIENT_DUMP) printf("%s\n", send_packet->buffer);
-	ret = write(ct->fd, (void *)send_packet, send_packet->head.packet_len + sizeof(struct raw_packet_head));
-	if(ret < 0) {
-		perror("write");
-		goto out;
-	}
 
 	/*Login recv*/
 	json_delete(recv_json);
-	recv_seed = NULL;
-	memset(ct->recv_buffer, 0, sizeof(ct->recv_buffer));
-	ret = read(ct->fd, ct->recv_buffer, sizeof(ct->recv_buffer));
-	if(ret < 0) {
-		perror("read");
-		goto out;
-	}
-	recv_json = json_loadb(recv_packet->buffer, recv_packet->head.packet_len, 0, &json_err);
-	if(CLIENT_DUMP) printf("%s\n", recv_packet->buffer);
-	if(recv_json == NULL) {
-		printf("It is not a json\n");
+	if(recv_json_object(ct, &recv_json) < 0) {
 		ret = -1;
 		goto out;
 	}
@@ -149,77 +145,63 @@ out:
 	return ret;
 }
 
-int send_message(struct client_struct *ct, const char *to, const char *message)
+int recv_stdin(struct client_struct *ct)
 {
-	struct raw_packet *send_packet = (void *)ct->send_buffer;
-	struct crc32_raw_packet *crc32_send_packet = (void *)ct->send_buffer;
-	json_t *json = NULL;
-	int ret = 0, raw_packet_size = 0;
-
-	json = json_object();
+	json_t *json = json_object();
+	unsigned char sendto[30], message[100];
+	scanf("%s%s", sendto, message);
 	json_object_set_new(json, "method", json_string("com.message.sendto.request"));
 	json_object_set_new(json, "message", json_string(message));
 	json_object_set_new(json, "token", json_string(ct->token));
-	json_object_set_new(json, "sendto", json_string(to));
+	json_object_set_new(json, "sendto", json_string(sendto));
 
-	send_packet->head.packet_len = json_dumpb(json, send_packet->buffer, 2000, 0);
-	send_packet->head.type = PACKET_TYPE_UNENCRY;
-
-	raw_packet_size = sizeof(struct raw_packet_head) + send_packet->head.packet_len;
-	send_packet->head.crc32 = crc32_classic(crc32_send_packet->crcdata, raw_packet_size -
-		sizeof(struct crc32_raw_packet));
-
-	if(CLIENT_DUMP) printf("%s\n", send_packet->buffer);
-	ret = write(ct->fd, ct->send_buffer, send_packet->head.packet_len + sizeof(struct raw_packet_head));
-	if(ret < 0) {
-		perror("write");
-	}
+	send_json_object(ct, json);
 	json_delete(json);
 	return 0;
 }
 
 int recv_message(struct client_struct *ct)
 {
-	struct raw_packet *recv_packet = (void *)ct->recv_buffer;
-	json_t *recv_json = NULL;
-	json_error_t json_err;
-	int ret = 0;
+	json_t *json = json_object();
 	const char *from, *message;
+	int ret = 0;
 
-	memset(ct->recv_buffer, 0, sizeof(ct->recv_buffer));
-	ret = read(ct->fd, ct->recv_buffer, sizeof(ct->recv_buffer));
-	if(ret < 0) {
-		perror("read\n");
+	if(recv_json_object(ct, &json) < 0) {
+		ret = -1;
 		goto out;
 	}
 
-	if(CLIENT_DUMP) printf("%s\n", recv_packet->buffer);
-	recv_json = json_loadb(recv_packet->buffer, recv_packet->head.packet_len, 0, &json_err);
-	if(recv_json == NULL) {
-		printf("It is not a json.\n");
-		goto out;
-	}
-
-	from = json_string_value(json_object_get(recv_json, "from"));
-	message = json_string_value(json_object_get(recv_json, "message"));
+	from = json_string_value(json_object_get(json, "from"));
+	message = json_string_value(json_object_get(json, "message"));
 	if(from == NULL || message == NULL) {
-	//	printf("Null message.\n");
-		json_delete(recv_json);
+		json_delete(json);
 		goto out;
 	}
 
 	printf("%s: %s\n", from, message);
+	json_delete(json);
 
-	json_delete(recv_json);
 out:
 	return ret;
 }
 
-int recv_stdin(struct client_struct *ct)
+int list_my_friends(struct client_struct *ct)
 {
-	unsigned char sendto[30], message[100];
-	scanf("%s%s", sendto, message);
-	send_message(ct, sendto, message);
+	json_t *json = json_object();
+	int len = 0, i = 0;
+	json_t *obj, *array;
+
+	json_object_set_new(json, "method", json_string("com.friends.list.request"));
+	json_object_set_new(json, "token", json_string(ct->token));
+	send_json_object(ct, json);
+	json_delete(json);
+
+	recv_json_object(ct, &json);
+	array = json_object_get(json, "friends");
+	json_array_foreach(array, i, obj) {
+		printf("%s\n", json_string_value(obj));
+	}
+	json_delete(json);
 	return 0;
 }
 
@@ -263,6 +245,7 @@ int main(int argc, char **argv)
 	if(login_to_server(&ct) < 0) {
 		goto out;
 	}
+	list_my_friends(&ct);
 
 	epollfd = epoll_create(MAX_EVENTS);
 	event.events = EPOLLIN | EPOLLET;
