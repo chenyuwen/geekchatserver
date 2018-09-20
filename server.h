@@ -28,8 +28,8 @@ struct client {
 	struct sockaddr addr;
 	char *token;
 	struct timeout timeout;
-	struct user *usr;
 	struct cbtimer timer;
+	struct user *usr;
 
 	int buffer_offset;
 	char buffer[SERVER_MAX_PACKETS];

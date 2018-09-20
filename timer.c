@@ -51,6 +51,14 @@ int kick_timer(struct server *sv, struct cbtimer *timer)
 	return __put_to_timer_list(sv, timer);
 }
 
+int is_timer_effective(struct server *sv, struct cbtimer *timer)
+{
+	if(timer->list.next == NULL) {
+		return 0;
+	}
+	return 1;
+}
+
 int add_timer(struct server *sv, struct cbtimer *timer, time_t delay_sec)
 {
 	timer->delay_sec = delay_sec;
@@ -68,8 +76,8 @@ int handle_timer_list(struct server *sv)
 	list_for_each_safe(pos, next, &sv->timers_list) {
 		tmp = list_entry(pos, struct cbtimer, list);
 		if(now >= tmp->timeout) {
-			tmp->handler(tmp, tmp->arg);
 			list_del(pos);
+			tmp->handler(tmp, tmp->arg);
 		} else {
 			break;
 		}

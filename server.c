@@ -78,7 +78,7 @@ int accept_new_client(struct server *sv)
 	strcpy(ct->ipaddr, addr_ntoa(&ct->addr));
 	ct->timer.handler = client_timeout_handler;
 	ct->timer.arg = sv;
-	add_timer(sv, &ct->timer, SERVER_CLIENT_NOTDATA_TIMEOUT);
+	add_timer(sv, &ct->timer, SERVER_CLIENT_UNUSED_TIMEOUT);
 	mlog("New client:%s\n", ct->ipaddr);
 
 	return 0;
@@ -98,10 +98,7 @@ int free_client_socket(struct server *sv, struct client *ct)
 	hashmap_remove(sv->clients_map, ct->name);
 	/*TODO: unlock*/
 	if(ct->usr != NULL) {
-		if(ct->usr->client == ct) {
-			free_token(sv, ct->usr);
-		}
-		user_put(sv, ct->usr);
+		ct->usr->client = NULL;
 		ct->usr = NULL;
 	}
 	close(ct->fd);

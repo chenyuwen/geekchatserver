@@ -32,7 +32,6 @@ int send_message_to(struct server *sv, struct user *from, struct user *to,
 	json_object_set_new(rsp_json, "token", json_string(to->token));
 	json_object_set_new(rsp_json, "message", json_string(message));
 
-	printf("from:%s\n", from->username);
 respond:
 	json_to_raw_packet(rsp_json, PACKET_TYPE_UNENCRY, packet);
 	respond_raw_packet(sv, to->client, packet);
@@ -66,6 +65,14 @@ int method_com_message_sendto_request(struct server *sv, struct client *ct, json
 	if(ret < 0 || from == NULL) {
 		mlog("Warning: The token was invaild.\n");
 		build_not_found_json(sv, ct, rsp_json, "com.message.sendto.respond");
+		goto respond;
+	}
+
+	if(!is_token_effective(sv, from)) {
+		/*TODO: write the message to databases*/
+		mlog("Warning: The user %s token is not effective\n", from->username);
+		build_not_found_json(sv, ct, rsp_json, "com.message.sendto.respond");
+		user_put(sv, from);
 		goto respond;
 	}
 

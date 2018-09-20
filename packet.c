@@ -58,15 +58,21 @@ int json_to_raw_packet(json_t *json, int type, struct raw_packet *packet)
 
 int call_method(struct server *sv, struct client *ct, json_t *json, const char *method)
 {
-	int i = 0;
+	int i = 0, ret = 0;
 	int (*handler)(struct server *, struct client *, json_t *);
 
+	if(sv->dump) printf("Enter:%s\n", method);
 	hashmap_get(sv->methods_map, (char *)method, (any_t *)&handler);
 	if(handler == NULL) {
 		respond_not_found(sv, ct, json);
-		return -1;
+		ret = -1;
+		goto out;
 	}
-	return handler(sv, ct, json);
+	ret = handler(sv, ct, json);
+	if(sv->dump) printf("Exit:%s\n", method);
+
+out:
+	return ret;
 }
 
 int dispatch_packet(struct server *sv, struct client *ct, struct raw_packet *packet)

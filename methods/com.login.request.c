@@ -53,7 +53,7 @@ int method_com_login_request(struct server *sv, struct client *ct, json_t *json)
 		goto respond;
 	}
 
-	ret = get_user_by_name_using_cache(sv, ct, username, &usr);
+	ret = get_user_by_name(sv, ct, username, &usr);
 	if(ret < 0) {
 		/*Can't find this user.*/
 		mlog("Warning: The user '%s' did not registered.\n", username);
@@ -87,12 +87,13 @@ int method_com_login_request(struct server *sv, struct client *ct, json_t *json)
 	}
 
 	alloc_new_token(sv, usr);
-	bind_user(sv, ct, usr);
 	json_object_set_new(rsp_json, "method", json_string("com.login.respond"));
 	json_object_set_new(rsp_json, "token", json_string(usr->token));
 	json_object_set_new(rsp_json, "status", json_true());
 	usr->is_online = 1;
 	usr->is_seed_existed = 0;
+	usr->client = ct;
+	ct->usr = usr;
 	user_put(sv, usr);
 
 respond:

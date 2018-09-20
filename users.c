@@ -11,6 +11,9 @@
 #include "err.h"
 #include "mlog.h"
 #include "friends.h"
+#include "timer.h"
+#include "tokens.h"
+#include "server_configs.h"
 
 int init_users_map(struct server *sv)
 {
@@ -23,6 +26,7 @@ int init_users_map(struct server *sv)
 int user_get(struct server *sv, struct user *usr)
 {
 	usr->use_cnt++;
+	kick_timer(sv, &usr->timer);
 	return 0;
 }
 
@@ -34,6 +38,13 @@ int user_put(struct server *sv, struct user *usr)
 		hashmap_remove(sv->users_map, usr->username);
 		if(usr->friends.is_inited) {
 			free_friends(usr);
+		}
+		if(usr->client != NULL) {
+			usr->client->usr = NULL;
+			usr->client = NULL;
+		}
+		if(is_timer_effective(sv, &usr->timer)) {
+			del_timer(sv, &usr->timer);
 		}
 		free(usr);
 	}
@@ -99,6 +110,18 @@ out:
 	return ret;
 }
 
+static int user_memory_free_handler(struct cbtimer *timer, void *arg)
+{
+	struct user *usr = container_of(timer, struct user, timer);
+	struct server *sv = (struct server *)arg;
+
+	if(is_token_in_memory(sv, usr)) {
+		free_token(sv, usr);
+	}
+	user_put(sv, usr);
+	return 0;
+}
+
 int get_user_by_name(struct server *sv, struct client *ct, const char *username,
 	struct user **usr)
 {
@@ -111,50 +134,17 @@ int get_user_by_name(struct server *sv, struct client *ct, const char *username,
 			usr = NULL;
 			goto err;
 		}
+
+		/*memory auto free*/
+		(*usr)->timer.handler = user_memory_free_handler;
+		(*usr)->timer.arg = (void *)sv;
+		add_timer(sv, &(*usr)->timer, SERVER_USER_UNUSED_TIMEOUT);
+		user_get(sv, *usr); /*cache*/
 	}
 	user_get(sv, *usr);
 
 err:
 	return ret;
-}
-
-int get_user_by_name_using_cache(struct server *sv, struct client *ct, const char *username,
-	struct user **usr)
-{
-	int ret = 0;
-	if(ct->usr != NULL) {
-		ret = strncmp(username, ct->usr->username, sizeof(ct->usr->username));
-		if(ret == 0) {
-			user_get(sv, ct->usr);
-			goto out;
-		}
-		user_put(sv, ct->usr);
-		ct->usr = NULL;
-	}
-
-	ret = get_user_by_name(sv, ct, username, &ct->usr);
-	if(ret < 0) {
-		ct->usr = NULL;
-		goto err;
-	}
-	user_get(sv, ct->usr); /*cache*/
-
-out:
-	*usr = ct->usr;
-err:
-	return ret;
-}
-
-int bind_user(struct server *sv, struct client *ct, struct user *usr)
-{
-	usr->client = ct;
-	return 0;
-}
-
-int unbind_user(struct server *sv, struct client *ct, struct user *usr)
-{
-	usr->client = NULL;
-	return 0;
 }
 
 int json_to_user(struct server *sv, json_t *json)

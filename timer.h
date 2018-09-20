@@ -19,6 +19,7 @@ int kick_timer(struct server *sv, struct cbtimer *timer);
 int add_timer(struct server *sv, struct cbtimer *timer, time_t delay_sec);
 int mod_timer(struct server *sv, struct cbtimer *timer, time_t delay_sec);
 int handle_timer_list(struct server *sv);
+int is_timer_effective(struct server *sv, struct cbtimer *timer);
 
 #endif /*__TIMER_H__*/
 

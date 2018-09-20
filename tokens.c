@@ -37,7 +37,26 @@ int free_token(struct server *sv, struct user *usr)
 int get_usr_by_token(struct server *sv, const char *token, struct user **usr)
 {
 	int ret = hashmap_get(sv->tokens_map, (char *)token, (any_t *)usr);
-	user_get(sv, *usr);
+	if(ret == 0 && usr != NULL) {
+		user_get(sv, *usr);
+	}
 	return ret;
+}
+
+int is_token_in_memory(struct server *sv, struct user *usr)
+{
+	struct user *out = NULL;
+	int ret = 0;
+	ret = hashmap_get(sv->tokens_map, (char *)usr->token, (any_t *)&out);
+	if(ret < 0 || out == NULL) {
+		printf("token is not in memory\n");
+		return 0;
+	}
+	return 1;
+}
+
+int is_token_effective(struct server *sv, struct user *usr)
+{
+	return is_token_in_memory(sv, usr);
 }
 
