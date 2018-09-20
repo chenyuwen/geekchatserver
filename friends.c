@@ -42,6 +42,7 @@ int get_friends_by_user_from_mysql(struct server *sv, struct user *usr)
 		goto out;
 	}
 
+	usr->friends.is_inited = 1;
 	while(row = mysql_fetch_row(result)) {
 		tmp = usr->friends.buffer + (SERVER_USERNAME_LENS + 1) * offset;
 		strncpy(tmp, row[1], SERVER_USERNAME_LENS);
@@ -62,5 +63,31 @@ int get_friends_by_user_from_mysql(struct server *sv, struct user *usr)
 out:
 	mysql_free_result(result);
 	return ret;
+}
+
+int get_friends_by_user(struct server *sv, struct user *usr, struct friends **friends)
+{
+	int ret = 0;
+	if(usr->friends.is_inited) {
+		ret = get_friends_by_user_from_mysql(sv, usr);
+	}
+	*friends = &usr->friends;
+	return ret;
+}
+
+int free_friends(struct user *usr)
+{
+	usr->friends.num_of_friends = 0;
+	usr->friends.is_inited = 0;
+	if(usr->friends.buffer != NULL) {
+		free(usr->friends.buffer);
+		hashmap_free(usr->friends.friends_map);
+	}
+	return 0;
+}
+
+int friends_put(struct friends *friends)
+{
+	return 0;
 }
 

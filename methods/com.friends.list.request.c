@@ -28,6 +28,7 @@ int method_com_friends_list_request(struct server *sv, struct client *ct, json_t
 	struct raw_packet *packet = malloc_raw_packet(sv, ct);
 	const char *token, *tmp;
 	struct user *usr;
+	struct friends *friends = NULL;
 	int ret = 0, i = 0;
 
 	json_object_set_new(rsp_json, "method", json_string("com.friends.list.respond"));
@@ -47,14 +48,22 @@ int method_com_friends_list_request(struct server *sv, struct client *ct, json_t
 		goto respond;
 	}
 
-	get_friends_by_user_from_mysql(sv, usr);
+	ret = get_friends_by_user(sv, usr, &friends);
+	if(ret < 0 || friends == NULL) {
+		mlog("Warning: The token was invaild.\n");
+		build_not_found_json(sv, ct, rsp_json, "com.friends.list.respond");
+		user_put(sv, usr);
+		goto respond;
+	}
+
 	for(i=0; i<usr->friends.num_of_friends; i++) {
 		tmp = usr->friends.buffer + (SERVER_USERNAME_LENS + 1) * i;
 		printf("friends:%s\n", tmp);
 		json_array_append(array, json_string(tmp));
 	}
 	json_object_set_new(rsp_json, "friends", array);
-
+	friends_put(friends);
+	user_put(sv, usr);
 
 respond:
 	json_to_raw_packet(rsp_json, PACKET_TYPE_UNENCRY, packet);

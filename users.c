@@ -10,6 +10,7 @@
 #include "users.h"
 #include "err.h"
 #include "mlog.h"
+#include "friends.h"
 
 int init_users_map(struct server *sv)
 {
@@ -31,6 +32,9 @@ int user_put(struct server *sv, struct user *usr)
 	if(usr->use_cnt == 0) {
 		mlog("Free user:%s\n", usr->username);
 		hashmap_remove(sv->users_map, usr->username);
+		if(usr->friends.is_inited) {
+			free_friends(usr);
+		}
 		free(usr);
 	}
 	return 0;

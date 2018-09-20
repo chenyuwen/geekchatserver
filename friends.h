@@ -4,13 +4,16 @@
 #include "c_hashmap/hashmap.h"
 
 struct friends {
+	int is_inited;
 	int num_of_friends;
 	unsigned char *buffer;
 	map_t friends_map;
 };
 
-int list_my_friends(struct server *sv, struct user *usr);
+int get_friends_by_user(struct server *sv, struct user *usr, struct friends **friends);
 int get_friends_by_user_from_mysql(struct server *sv, struct user *usr);
+int free_friends(struct user *usr);
+int friends_put(struct friends *friends);
 
 #endif /*__FRIENDS_H__*/
 
