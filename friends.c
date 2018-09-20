@@ -68,7 +68,7 @@ out:
 int get_friends_by_user(struct server *sv, struct user *usr, struct friends **friends)
 {
 	int ret = 0;
-	if(usr->friends.is_inited) {
+	if(!usr->friends.is_inited) {
 		ret = get_friends_by_user_from_mysql(sv, usr);
 	}
 	*friends = &usr->friends;
