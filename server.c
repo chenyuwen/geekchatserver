@@ -174,6 +174,7 @@ int client_socket(struct server *sv, struct epoll_event *event)
 
 		ct->buffer_offset += ret;
 		ret = try_make_net_packet(sv, ct);
+		kick_timer(sv, &ct->timer);
 		if(ret < 0) {
 			return free_client_socket(sv, ct);
 		}
