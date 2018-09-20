@@ -20,8 +20,18 @@
 #include "hex.h"
 #include "mlog.h"
 #include "tokens.h"
+#include "timer.h"
 
 #define addr_ntoa(addr)  (inet_ntoa(((struct sockaddr_in *)(addr))->sin_addr))
+int free_client_socket(struct server *sv, struct client *ct);
+
+int client_timeout_handler(struct cbtimer *timer, void *arg)
+{
+	struct client *ct = container_of(timer, struct client, timer);
+	struct server *sv = (void *)arg;
+	free_client_socket(sv, ct);
+	return 0;
+}
 
 int accept_new_client(struct server *sv)
 {
@@ -66,6 +76,9 @@ int accept_new_client(struct server *sv)
 		return errno;
 	}
 	strcpy(ct->ipaddr, addr_ntoa(&ct->addr));
+	ct->timer.handler = client_timeout_handler;
+	ct->timer.arg = sv;
+	add_timer(sv, &ct->timer, SERVER_CLIENT_NOTDATA_TIMEOUT);
 	mlog("New client:%s\n", ct->ipaddr);
 
 	return 0;
@@ -182,6 +195,7 @@ int main(int argc, char **argv)
 	sv->methods_map = hashmap_new();
 	sv->mysql_config = &default_mysql_config;
 	sv->dump = SERVER_DUMP_BUFFER;
+	init_timer(sv);
 //	init_mlog(sv);
 	init_token(sv);
 	init_methods_maps(sv);
@@ -234,7 +248,7 @@ int main(int argc, char **argv)
 	}
 
 	while(!sv->stop_server) {
-		ret = epoll_wait(sv->epollfd, sv->eventlist, MAX_EVENTS, 3000);
+		ret = epoll_wait(sv->epollfd, sv->eventlist, MAX_EVENTS, 1000);
 		if(ret < 0) {
 			perror("epoll_wait");
 			return errno;
@@ -247,6 +261,7 @@ int main(int argc, char **argv)
 				client_socket(sv, &sv->eventlist[i]);
 			}
 		}
+		handle_timer_list(sv);
 	}
 
 	return 0;

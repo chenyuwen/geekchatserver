@@ -12,6 +12,8 @@
 #include "packet.h"
 #include "mysql_connector.h"
 #include "random_pool.h"
+#include "list/gnu_list.h"
+#include "timer.h"
 
 struct user;
 
@@ -27,6 +29,7 @@ struct client {
 	char *token;
 	struct timeout timeout;
 	struct user *usr;
+	struct cbtimer timer;
 
 	int buffer_offset;
 	char buffer[SERVER_MAX_PACKETS];
@@ -45,6 +48,8 @@ struct server {
 	map_t methods_map;
 	map_t users_map;
 	map_t tokens_map;
+
+	struct list_head timers_list;
 };
 
 #endif /*__SERVER_H__*/
