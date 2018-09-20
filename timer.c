@@ -26,7 +26,7 @@ static inline int __put_to_timer_list(struct server *sv, struct cbtimer *timer)
 			break;
 		}
 	}
-	list_add_tail(&sv->timers_list, &timer->list);
+	list_add_tail(&timer->list, &sv->timers_list);
 	return 0;
 }
 
