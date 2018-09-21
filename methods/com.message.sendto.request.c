@@ -18,6 +18,7 @@
 #include "../mlog.h"
 #include "../users.h"
 #include "../tokens.h"
+#include "../hex.h"
 #include "methods.h"
 
 int send_message_to(struct server *sv, struct user *from, struct user *to,
@@ -40,6 +41,37 @@ out:
 	/*free json*/
 	json_delete(rsp_json);
 	free_raw_packet(sv, to->client, packet);
+}
+
+int write_message_to_mysql(struct server *sv, struct user *from, struct user *to,
+	const char *message)
+{
+	struct mysql_config *config = sv->mysql_config;
+	int ret = 0;
+	char query[SERVER_MAX_PACKETS];
+	struct user *tmp = NULL;
+	unsigned char raw_uuid[SERVER_UUID_LENS / 2];
+	unsigned char uuid[SERVER_UUID_LENS + 1] = {0};
+
+	get_random_bytes(&sv->random, raw_uuid, sizeof(raw_uuid));
+	hex_to_ascii(uuid, raw_uuid, sizeof(raw_uuid));
+
+	snprintf(query, sizeof(query),"insert into messages(uuid, from_user, to_user, message)"\
+		" values ('%s', '%s', '%s', '%s')", uuid, from->username, to->username, message);
+	if(sv->dump) mlog("%s\n", query);
+	ret = mysql_real_query(config->mysql, query, strlen(query));
+	if(ret < 0) {
+		mlog("mysql_query: %s\n", mysql_error(config->mysql));
+		return -mysql_errno(config->mysql);
+	}
+
+	if(mysql_affected_rows(config->mysql) != 1) {
+		mlog("affected rows is not one.\n");
+		return -1;
+	}
+
+
+	return ret;
 }
 
 int method_com_message_sendto_request(struct server *sv, struct client *ct, json_t *json)
@@ -92,19 +124,19 @@ int method_com_message_sendto_request(struct server *sv, struct client *ct, json
 		goto respond;
 	}
 
-	if(to->client == NULL) {
-		/*TODO: write the message to databases*/
-		mlog("Warning: The user %s did not login\n", sendto);
+	message = json_string_value(json_object_get(json, "message"));
+	if(sendto == NULL) {
+		mlog("Warning: The packet did not have username.\n");
 		build_not_found_json(sv, ct, rsp_json, "com.message.sendto.respond");
 		user_put(sv, from);
 		user_put(sv, to);
 		goto respond;
 	}
 
-	message = json_string_value(json_object_get(json, "message"));
-	if(sendto == NULL) {
-		mlog("Warning: The packet did not have username.\n");
-		build_not_found_json(sv, ct, rsp_json, "com.message.sendto.respond");
+	if(to->client == NULL) {
+		/*TODO: write the message to databases*/
+		write_message_to_mysql(sv, from, to, message);
+		mlog("Warning: Put the message to databases.\n");
 		user_put(sv, from);
 		user_put(sv, to);
 		goto respond;

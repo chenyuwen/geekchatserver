@@ -36,6 +36,7 @@ CREATE TABLE IF NOT EXISTS messages (
     `uuid` VARCHAR(32) NOT NULL,
     `from_user` VARCHAR(20) NOT NULL,
     `to_user` VARCHAR(20) NOT NULL,
+    `have_read` TINYINT(1) NOT NULL DEFAULT 0,
     `send_timestamp` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `message` VARCHAR(200) NOT NULL,
     UNIQUE KEY `message_uni` (`uuid`)
