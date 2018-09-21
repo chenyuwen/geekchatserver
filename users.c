@@ -62,6 +62,7 @@ int get_user_by_name_from_mysql(struct server *sv, const char *username, struct 
 
 	snprintf(query, sizeof(query),"select uid, username, password from "
 		"users where username = '%s'", username);
+	if(sv->dump) mlog("%s\n", query);
 	ret = mysql_query(config->mysql, query);
 	if(ret < 0) {
 		mlog("mysql_query: %s\n", mysql_error(config->mysql));

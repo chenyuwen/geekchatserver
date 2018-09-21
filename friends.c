@@ -15,6 +15,7 @@ int get_friends_by_user_from_mysql(struct server *sv, struct user *usr)
 
 	snprintf(query, sizeof(query),"select username, friend from "
 		"friends where username = '%s'", usr->username);
+	if(sv->dump) mlog("%s\n", query);
 	ret = mysql_query(config->mysql, query);
 	if(ret < 0) {
 		mlog("mysql_query: %s\n", mysql_error(config->mysql));
