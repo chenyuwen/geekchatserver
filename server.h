@@ -15,6 +15,7 @@
 #include "list/gnu_list.h"
 #include "timer.h"
 #include "server_configs.h"
+#include "messages.h"
 
 struct user;
 
@@ -30,6 +31,7 @@ struct client {
 	struct sockaddr addr;
 	struct timeout timeout;
 	struct user *usr;
+	struct message_looper looper;
 
 	int buffer_offset;
 	char buffer[SERVER_MAX_PACKETS];

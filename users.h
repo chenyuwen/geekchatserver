@@ -22,12 +22,11 @@ struct user {
 };
 
 int init_users_map(struct server *sv);
-int get_user_by_name(struct server *sv, struct client *ct, const char *name,
-	struct user **usr);
+int get_user_by_name(struct server *sv, const char *name, struct user **usr);
 int user_get(struct server *sv, struct user *usr);
 int user_put(struct server *sv, struct user *usr);
 int free_user(struct user *usr);
-int bind_user_to_client(struct user *usr, struct client *ct);
+int bind_user_to_client(struct server *sv, struct user *usr, struct client *ct);
 int unbind_user(struct user *usr);
 int is_user_bind(struct user *usr);
 

@@ -122,7 +122,6 @@ int respond_raw_packet(struct server *sv, struct client *ct,
 	struct raw_packet *packet)
 {
 	mlog("To %s:%s\n", ct->ipaddr, packet->buffer);
-	write(ct->fd, (void *)packet, sizeof_raw_packet(packet));
-	return 0;
+	return write(ct->fd, (void *)packet, sizeof_raw_packet(packet));
 }
 

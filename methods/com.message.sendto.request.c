@@ -19,42 +19,16 @@
 #include "../users.h"
 #include "../tokens.h"
 #include "../hex.h"
+#include "../messages.h"
 #include "methods.h"
 
-int send_message_to(struct server *sv, struct user *from, struct user *to,
-	const char *message)
-{
-	json_t *rsp_json = json_object();
-	struct raw_packet *packet = malloc_raw_packet(sv, to->client);
-
-	json_object_set_new(rsp_json, "method", json_string("com.message.recv.request"));
-	json_object_set_new(rsp_json, "status", json_true());
-	json_object_set_new(rsp_json, "from", json_string(from->username));
-	json_object_set_new(rsp_json, "token", json_string(to->token));
-	json_object_set_new(rsp_json, "message", json_string(message));
-
-respond:
-	json_to_raw_packet(rsp_json, PACKET_TYPE_UNENCRY, packet);
-	respond_raw_packet(sv, to->client, packet);
-
-out:
-	/*free json*/
-	json_delete(rsp_json);
-	free_raw_packet(sv, to->client, packet);
-}
-
 int write_message_to_mysql(struct server *sv, struct user *from, struct user *to,
-	const char *message)
+	const char *uuid, const char *message)
 {
 	struct mysql_config *config = sv->mysql_config;
 	int ret = 0;
 	char query[SERVER_MAX_PACKETS];
 	struct user *tmp = NULL;
-	unsigned char raw_uuid[SERVER_UUID_LENS / 2];
-	unsigned char uuid[SERVER_UUID_LENS + 1] = {0};
-
-	get_random_bytes(&sv->random, raw_uuid, sizeof(raw_uuid));
-	hex_to_ascii(uuid, raw_uuid, sizeof(raw_uuid));
 
 	snprintf(query, sizeof(query),"insert into messages(uuid, from_user, to_user, message)"\
 		" values ('%s', '%s', '%s', '%s')", uuid, from->username, to->username, message);
@@ -70,8 +44,18 @@ int write_message_to_mysql(struct server *sv, struct user *from, struct user *to
 		return -1;
 	}
 
-
 	return ret;
+}
+
+int allow_new_uuid(struct server *sv, unsigned char *uuid)
+{
+	unsigned char raw_uuid[SERVER_UUID_LENS / 2];
+
+	memset(uuid, 0, SERVER_UUID_LENS + 1);
+	get_random_bytes(&sv->random, raw_uuid, sizeof(raw_uuid));
+	hex_to_ascii(uuid, raw_uuid, sizeof(raw_uuid));
+	/*TODO: check the uuid*/
+	return 0;
 }
 
 int method_com_message_sendto_request(struct server *sv, struct client *ct, json_t *json)
@@ -82,6 +66,7 @@ int method_com_message_sendto_request(struct server *sv, struct client *ct, json
 	const char *token = NULL, *sendto = NULL, *message = NULL;
 	struct user *from, *to;
 	int ret = 0;
+	unsigned char uuid[SERVER_UUID_LENS + 1] = {0};
 
 	json_object_set_new(rsp_json, "method", json_string("com.message.sendto.respond"));
 	json_object_set_new(rsp_json, "status", json_true());
@@ -116,7 +101,7 @@ int method_com_message_sendto_request(struct server *sv, struct client *ct, json
 		goto respond;
 	}
 
-	ret = get_user_by_name(sv, ct, sendto, &to);
+	ret = get_user_by_name(sv, sendto, &to);
 	if(to == NULL || ret < 0) {
 		mlog("Warning: The user %s did not registerd\n", sendto);
 		build_not_found_json(sv, ct, rsp_json, "com.message.sendto.respond");
@@ -133,22 +118,24 @@ int method_com_message_sendto_request(struct server *sv, struct client *ct, json
 		goto respond;
 	}
 
+	allow_new_uuid(sv, uuid);
 	if(to->client == NULL) {
 		/*TODO: write the message to databases*/
-		write_message_to_mysql(sv, from, to, message);
+		write_message_to_mysql(sv, from, to, uuid, message);
 		mlog("Warning: Put the message to databases.\n");
 		user_put(sv, from);
 		user_put(sv, to);
 		goto respond;
 	}
 
-	if(send_message_to(sv, from, to, message) < 0) {
+	if(send_message_to(sv, from, to, uuid, message) < 0) {
 		mlog("Warning: The message send to %s failed.\n", to->username);
 		build_not_found_json(sv, ct, rsp_json, "com.message.sendto.respond");
 		user_put(sv, from);
 		user_put(sv, to);
 		goto respond;
 	}
+	write_message_to_mysql(sv, from, to, uuid, message);
 	user_put(sv, from);
 	user_put(sv, to);
 

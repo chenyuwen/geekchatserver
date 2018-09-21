@@ -6,7 +6,7 @@ server: server.o mysql_connector.o libmethods.a libserver.a libcrypto.a libjanss
 client: libjansson.a libcrc32.a libhashmap.a client.o libcrypto.a
 	gcc $(filter %.o, $^) -L./ $(patsubst lib%.a,-l%, $(filter %.a,$^)) -o client
 
-libserver.a: packet.o users.o mysql_connector.o random_pool.o mlog.o tokens.o friends.o timer.o
+libserver.a: packet.o users.o mysql_connector.o random_pool.o mlog.o tokens.o friends.o timer.o messages.o
 	ar -r $@ $^
 
 libmethods.a: $(patsubst %.c, %.o, $(wildcard ./methods/*.c))

@@ -5,6 +5,7 @@
 #include <errno.h>
 #include <string.h>
 #include <stdint.h>
+#include <mysql/mysql.h>
 #include "packet.h"
 #include "server.h"
 #include "users.h"
@@ -13,6 +14,7 @@
 #include "friends.h"
 #include "timer.h"
 #include "tokens.h"
+#include "messages.h"
 #include "server_configs.h"
 
 int init_users_map(struct server *sv)
@@ -127,8 +129,7 @@ static int user_memory_free_handler(struct cbtimer *timer, void *arg)
 	return 0;
 }
 
-int get_user_by_name(struct server *sv, struct client *ct, const char *username,
-	struct user **usr)
+int get_user_by_name(struct server *sv, const char *username, struct user **usr)
 {
 	int ret = 0;
 
@@ -143,7 +144,6 @@ int get_user_by_name(struct server *sv, struct client *ct, const char *username,
 		/*memory auto free*/
 		(*usr)->timer.handler = user_memory_free_handler;
 		(*usr)->timer.arg = (void *)sv;
-		mlog("%s\n", __func__);
 		add_timer(sv, &(*usr)->timer, SERVER_USER_UNUSED_TIMEOUT);
 		mod_timer(sv, &(*usr)->timer, 60);
 		user_get(sv, *usr); /*cache*/
@@ -157,17 +157,23 @@ err:
 	return ret;
 }
 
-int bind_user_to_client(struct user *usr, struct client *ct)
+int bind_user_to_client(struct server *sv, struct user *usr, struct client *ct)
 {
 	ct->usr = usr;
 	usr->client = ct;
-	/*TODO: 开启自动回应消息*/
+
+	ct->looper.sv = sv;
+	ct->looper.ct = ct;
+	start_message_looper(&ct->looper);
 	return 0;
 }
 
 int unbind_user(struct user *usr)
 {
-	/*TODO: 关闭消息自动回应*/
+	if(is_message_looper_alive(&usr->client->looper)) {
+		stop_message_looper(&usr->client->looper);
+	}
+
 	usr->client->usr = NULL;
 	usr->client = NULL;
 	return 0;

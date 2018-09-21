@@ -48,7 +48,7 @@ int method_com_login_seed_request(struct server *sv, struct client *ct, json_t *
 		build_not_found_json(sv, ct, rsp_json, "com.login.seed.respond");
 		goto respond;
 	}
-	ret = get_user_by_name(sv, ct, username, &usr);
+	ret = get_user_by_name(sv, username, &usr);
 	if(ret < 0) {
 		/*Can't find this user.*/
 		mlog("Warning: The user '%s' did not registered.\n", username);

@@ -17,7 +17,6 @@ int store_token_to_mysql(struct server *sv, struct user *usr)
 	struct mysql_config *config = sv->mysql_config;
 	int ret = 0;
 	char query[200];
-	struct user *tmp = NULL;
 
 	snprintf(query, sizeof(query),"update users set token = '%s', token_timestamp = '%s'" \
 		" where username = '%s'", usr->token, "123", usr->username);
@@ -44,7 +43,6 @@ int get_username_by_token_from_mysql(struct server *sv, const char *token,
 	MYSQL_ROW row = NULL;
 	int ret = 0;
 	char query[200];
-	struct user *tmp = NULL;
 
 	snprintf(query, sizeof(query),"select username, token from users" \
 		" where token = '%s'", token);
@@ -131,11 +129,11 @@ int get_usr_by_token(struct server *sv, struct client *ct,
 		*usr = NULL;
 		goto out;
 	}
-	ret = get_user_by_name(sv, ct, username, usr);
+	ret = get_user_by_name(sv, username, usr);
 	if(ret < 0 || *usr == NULL) {
 		goto out;
 	}
-	bind_user_to_client(*usr, ct);
+	bind_user_to_client(sv, *usr, ct);
 
 out:
 	return ret;
