@@ -135,10 +135,7 @@ int get_usr_by_token(struct server *sv, struct client *ct,
 	if(ret < 0 || *usr == NULL) {
 		goto out;
 	}
-
-	printf("user set token\n");
-	ct->usr = *usr;
-	(*usr)->client = ct;
+	bind_user_to_client(*usr, ct);
 
 out:
 	return ret;

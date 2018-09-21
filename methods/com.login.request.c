@@ -92,8 +92,7 @@ int method_com_login_request(struct server *sv, struct client *ct, json_t *json)
 	json_object_set_new(rsp_json, "status", json_true());
 	usr->is_online = 1;
 	usr->is_seed_existed = 0;
-	usr->client = ct;
-	ct->usr = usr;
+	bind_user_to_client(usr, ct);
 	user_put(sv, usr);
 
 respond:

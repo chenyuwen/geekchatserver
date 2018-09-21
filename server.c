@@ -101,9 +101,8 @@ int free_client_socket(struct server *sv, struct client *ct)
 	/*TODO: lock*/
 	hashmap_remove(sv->clients_map, ct->name);
 	/*TODO: unlock*/
-	if(ct->usr != NULL) {
-		ct->usr->client = NULL;
-		ct->usr = NULL;
+	if(is_user_bind(ct->usr)) {
+		unbind_user(ct->usr);
 	}
 	if(is_timer_effective(sv, &ct->timer)) {
 		del_timer(sv, &ct->timer);

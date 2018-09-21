@@ -41,9 +41,8 @@ int user_put(struct server *sv, struct user *usr)
 		if(usr->friends.is_inited) {
 			free_friends(usr);
 		}
-		if(usr->client != NULL) {
-			usr->client->usr = NULL;
-			usr->client = NULL;
+		if(is_user_bind(usr)) {
+			unbind_user(usr);
 		}
 		if(is_timer_effective(sv, &usr->timer)) {
 			printf("%s %d del_timer\n", __func__, __LINE__);
@@ -156,6 +155,32 @@ int get_user_by_name(struct server *sv, struct client *ct, const char *username,
 
 err:
 	return ret;
+}
+
+int bind_user_to_client(struct user *usr, struct client *ct)
+{
+	ct->usr = usr;
+	usr->client = ct;
+	/*TODO: 开启自动回应消息*/
+	return 0;
+}
+
+int unbind_user(struct user *usr)
+{
+	/*TODO: 关闭消息自动回应*/
+	usr->client->usr = NULL;
+	usr->client = NULL;
+	return 0;
+}
+
+int is_user_bind(struct user *usr)
+{
+	if(usr == NULL) {
+		return 0;
+	} else if(usr->client == NULL) {
+		return 0;
+	}
+	return 1;
 }
 
 int json_to_user(struct server *sv, json_t *json)
