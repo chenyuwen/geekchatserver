@@ -40,7 +40,11 @@ int accept_new_client(struct server *sv)
 	socklen_t socklen;
 
 	ct = (void *)malloc(sizeof(struct client));
-	memset(ct, 0, sizeof(*ct));
+	if(ct == NULL) {
+		mlog("alloc memory failed.\n");
+		return errno;
+	}
+	memset(ct, 0, sizeof(struct client));
 	socklen = sizeof(struct sockaddr);
 	ct->fd = accept(sv->serverfd, &ct->addr, &socklen);
 	if(ct->fd < 0) {
@@ -100,6 +104,9 @@ int free_client_socket(struct server *sv, struct client *ct)
 	if(ct->usr != NULL) {
 		ct->usr->client = NULL;
 		ct->usr = NULL;
+	}
+	if(is_timer_effective(sv, &ct->timer)) {
+		del_timer(sv, &ct->timer);
 	}
 	close(ct->fd);
 	free(ct);

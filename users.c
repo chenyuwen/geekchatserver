@@ -26,7 +26,9 @@ int init_users_map(struct server *sv)
 int user_get(struct server *sv, struct user *usr)
 {
 	usr->use_cnt++;
-	kick_timer(sv, &usr->timer);
+	if(is_timer_effective(sv, &usr->timer)) {
+		kick_timer(sv, &usr->timer);
+	}
 	return 0;
 }
 
@@ -44,7 +46,8 @@ int user_put(struct server *sv, struct user *usr)
 			usr->client = NULL;
 		}
 		if(is_timer_effective(sv, &usr->timer)) {
-			del_timer(sv, &usr->timer);
+			printf("%s %d del_timer\n", __func__, __LINE__);
+			//del_timer(sv, &usr->timer);
 		}
 		free(usr);
 	}
@@ -60,7 +63,7 @@ int get_user_by_name_from_mysql(struct server *sv, const char *username, struct 
 	char query[100];
 	struct user *tmp = NULL;
 
-	snprintf(query, sizeof(query),"select uid, username, password from "
+	snprintf(query, sizeof(query),"select username, password, token from "
 		"users where username = '%s'", username);
 	if(sv->dump) mlog("%s\n", query);
 	ret = mysql_query(config->mysql, query);
@@ -92,11 +95,13 @@ int get_user_by_name_from_mysql(struct server *sv, const char *username, struct 
 
 	memset(tmp, 0, sizeof(*tmp));
 	row = mysql_fetch_row(result);
-	tmp->uid = atoi(row[0]);
-	strncpy(tmp->username, row[1], SERVER_USERNAME_LENS);
-	strncpy(tmp->password, row[2], SERVER_PASSWORD_LENS);
-	if(sv->dump) mlog("usrid:%s, usrname:%s, password:%s\n", row[0],
-		tmp->username, tmp->password);
+	strncpy(tmp->username, row[0], SERVER_USERNAME_LENS);
+	strncpy(tmp->password, row[1], SERVER_PASSWORD_LENS);
+	if(row[2] != NULL) {
+		strncpy(tmp->token, row[2], SERVER_TOKEN_LENS);
+	}
+	if(sv->dump) mlog("usrname:%s, password:%s token:%s\n", tmp->username,
+		tmp->password, tmp->token);
 	ret = hashmap_put(sv->users_map, tmp->username, tmp);
 	if(ret != MAP_OK) {
 		mlog("Error: The user %s had been in the hashtable\n", username);
@@ -139,8 +144,13 @@ int get_user_by_name(struct server *sv, struct client *ct, const char *username,
 		/*memory auto free*/
 		(*usr)->timer.handler = user_memory_free_handler;
 		(*usr)->timer.arg = (void *)sv;
+		mlog("%s\n", __func__);
 		add_timer(sv, &(*usr)->timer, SERVER_USER_UNUSED_TIMEOUT);
+		mod_timer(sv, &(*usr)->timer, 60);
 		user_get(sv, *usr); /*cache*/
+
+		/*register token*/
+		try_effect_token(sv, *usr);
 	}
 	user_get(sv, *usr);
 

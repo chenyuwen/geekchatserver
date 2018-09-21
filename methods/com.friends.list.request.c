@@ -41,7 +41,7 @@ int method_com_friends_list_request(struct server *sv, struct client *ct, json_t
 		goto respond;
 	}
 
-	ret = get_usr_by_token(sv, token, &usr);
+	ret = get_usr_by_token(sv, ct, token, &usr);
 	if(ret < 0 || usr == NULL) {
 		mlog("Warning: The token was invaild.\n");
 		build_not_found_json(sv, ct, rsp_json, "com.friends.list.respond");

@@ -17,6 +17,9 @@ struct list_head {
 	((type *)((char *)ptr - offsetof(type, member)))
 #endif
 
+#define WRITE_ONCE(dst, src) ((dst) = (src))
+#define READ_ONCE(dst) (dst)
+
 /*
  * Simple doubly linked list implementation.
  *
@@ -34,7 +37,7 @@ struct list_head {
 
 static inline void INIT_LIST_HEAD(struct list_head *list)
 {
-	list->next = list;
+	WRITE_ONCE(list->next, list);
 	list->prev = list;
 }
 
@@ -52,7 +55,7 @@ static inline void __list_add(struct list_head *new,
 	next->prev = new;
 	new->next = next;
 	new->prev = prev;
-	prev->next = new;
+	WRITE_ONCE(prev->next, new);
 }
 #else
 extern void __list_add(struct list_head *new,
@@ -97,7 +100,7 @@ static inline void list_add_tail(struct list_head *new, struct list_head *head)
 static inline void __list_del(struct list_head * prev, struct list_head * next)
 {
 	next->prev = prev;
-	prev->next = next;
+	WRITE_ONCE(prev->next, next);
 }
 
 /**
@@ -196,7 +199,7 @@ static inline int list_is_last(const struct list_head *list,
  */
 static inline int list_empty(const struct list_head *head)
 {
-	return head->next == head;
+	return READ_ONCE(head->next) == head;
 }
 
 /**
@@ -391,8 +394,11 @@ static inline void list_splice_tail_init(struct list_head *list,
  *
  * Note that if the list is empty, it returns NULL.
  */
-#define list_first_entry_or_null(ptr, type, member) \
-	(!list_empty(ptr) ? list_first_entry(ptr, type, member) : NULL)
+#define list_first_entry_or_null(ptr, type, member) ({ \
+	struct list_head *head__ = (ptr); \
+	struct list_head *pos__ = READ_ONCE(head__->next); \
+	pos__ != head__ ? list_entry(pos__, type, member) : NULL; \
+})
 
 /**
  * list_next_entry - get the next element in list

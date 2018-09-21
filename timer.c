@@ -1,6 +1,7 @@
 #include <time.h>
 #include "server.h"
 #include "list/gnu_list.h"
+#include "mlog.h"
 #include "timer.h"
 
 time_t get_now_time(void)
@@ -14,10 +15,10 @@ int init_timer(struct server *sv)
 	INIT_LIST_HEAD(&sv->timers_list);
 }
 
-static inline int __put_to_timer_list(struct server *sv, struct cbtimer *timer)
+static int __insert_to_timer_list(struct server *sv, struct cbtimer *timer)
 {
-	struct list_head *pos;
-	struct cbtimer *tmp;
+	struct list_head *pos = NULL;
+	struct cbtimer *tmp = NULL;
 
 	list_for_each_prev(pos, &sv->timers_list) {
 		tmp = list_entry(pos, struct cbtimer, list);
@@ -38,17 +39,17 @@ int del_timer(struct server *sv, struct cbtimer *timer)
 
 int mod_timer(struct server *sv, struct cbtimer *timer, time_t delay_sec)
 {
-	list_del(&timer->list);
+	del_timer(sv, timer);
 	timer->delay_sec = delay_sec;
 	timer->timeout = get_now_time() + delay_sec;
-	return __put_to_timer_list(sv, timer);
+	return __insert_to_timer_list(sv, timer);
 }
 
 int kick_timer(struct server *sv, struct cbtimer *timer)
 {
-	list_del(&timer->list);
+	del_timer(sv, timer);
 	timer->timeout = get_now_time() + timer->delay_sec;
-	return __put_to_timer_list(sv, timer);
+	return __insert_to_timer_list(sv, timer);
 }
 
 int is_timer_effective(struct server *sv, struct cbtimer *timer)
@@ -64,7 +65,7 @@ int add_timer(struct server *sv, struct cbtimer *timer, time_t delay_sec)
 	timer->delay_sec = delay_sec;
 	timer->timeout = get_now_time() + delay_sec;
 	INIT_LIST_HEAD(&timer->list);
-	return __put_to_timer_list(sv, timer);
+	return __insert_to_timer_list(sv, timer);
 }
 
 int handle_timer_list(struct server *sv)
@@ -76,7 +77,7 @@ int handle_timer_list(struct server *sv)
 	list_for_each_safe(pos, next, &sv->timers_list) {
 		tmp = list_entry(pos, struct cbtimer, list);
 		if(now >= tmp->timeout) {
-			list_del(pos);
+			del_timer(sv, tmp);
 			tmp->handler(tmp, tmp->arg);
 		} else {
 			break;

@@ -61,7 +61,7 @@ int method_com_message_sendto_request(struct server *sv, struct client *ct, json
 		goto respond;
 	}
 
-	ret = get_usr_by_token(sv, token, &from);
+	ret = get_usr_by_token(sv, ct, token, &from);
 	if(ret < 0 || from == NULL) {
 		mlog("Warning: The token was invaild.\n");
 		build_not_found_json(sv, ct, rsp_json, "com.message.sendto.respond");

@@ -14,6 +14,7 @@
 #include "random_pool.h"
 #include "list/gnu_list.h"
 #include "timer.h"
+#include "server_configs.h"
 
 struct user;
 
@@ -23,12 +24,11 @@ struct timeout {
 
 struct client {
 	struct epoll_event event;
+	struct cbtimer timer;
 	char name[20], ipaddr[20];
 	int fd;
 	struct sockaddr addr;
-	char *token;
 	struct timeout timeout;
-	struct cbtimer timer;
 	struct user *usr;
 
 	int buffer_offset;
