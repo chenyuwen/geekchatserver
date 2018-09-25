@@ -17,8 +17,8 @@
 #include "mlog.h"
 
 #define SERVER_DEFAULT_PORT 1200
-//#define SERVER_DEFAULT_ADDR "149.28.70.170"
-#define SERVER_DEFAULT_ADDR "127.0.0.1"
+#define SERVER_DEFAULT_ADDR "149.28.70.170"
+//#define SERVER_DEFAULT_ADDR "127.0.0.1"
 #define CLIENT_DUMP 1
 #define STDIN 0
 
@@ -272,13 +272,17 @@ int main(int argc, char **argv)
 		}
 		for(i=0; i<ret; i++) {
 			if(eventlist[i].data.fd == ct.fd) {
-				recv_message(&ct);
+				if(recv_message(&ct) < 0) {
+					printf("The socket was close.\n");
+					goto exit;
+				}
 			} else if(eventlist[i].data.fd == STDIN) {
 				recv_stdin(&ct);
 			}
 		}
 	}
 
+exit:
 	close(epollfd);
 
 out:
