@@ -10,6 +10,15 @@ extern int method_com_login_seed_request(struct server *sv, struct client *ct, j
 extern int method_com_login_request(struct server *sv, struct client *ct, json_t *json);
 extern int method_com_message_sendto_request(struct server *sv, struct client *ct, json_t *json);
 extern int method_com_friends_list_request(struct server *sv, struct client *ct, json_t *json);
+extern int method_com_logout_request(struct server *sv, struct client *ct, json_t *json);
+extern int method_com_friends_delete_request(struct server *sv, struct client *ct, json_t *json);
+extern int method_com_friends_add_request(struct server *sv, struct client *ct, json_t *json);
+extern int method_com_friends_info_request(struct server *sv, struct client *ct, json_t *json);
+extern int method_com_heartbeat_request(struct server *sv, struct client *ct, json_t *json);
+extern int method_com_register_request(struct server *sv, struct client *ct, json_t *json);
+extern int method_com_user_changeinfo_request(struct server *sv, struct client *ct, json_t *json);
+extern int method_com_user_info_request(struct server *sv, struct client *ct, json_t *json);
+extern int method_com_user_password_request(struct server *sv, struct client *ct, json_t *json);
 
 static struct method methods[] = {
 	{
@@ -31,6 +40,42 @@ static struct method methods[] = {
 	{
 		"com.friends.list.request",
 		method_com_friends_list_request,
+	},
+	{
+		"com.logout.request",
+		method_com_logout_request,
+	},
+	{
+		"com.friends.delete.request",
+		method_com_friends_delete_request,
+	},
+	{
+		"com.friends.add.request",
+		method_com_friends_add_request,
+	},
+	{
+		"com.friends.info.request",
+		method_com_friends_info_request,
+	},
+	{
+		"com.heartbeat.request",
+		method_com_heartbeat_request,
+	},
+	{
+		"com.register.request",
+		method_com_register_request,
+	},
+	{
+		"com.user.changeinfo.request",
+		method_com_user_changeinfo_request,
+	},
+	{
+		"com.user.info.request",
+		method_com_user_info_request,
+	},
+	{
+		"com.user.password.request",
+		method_com_user_password_request,
 	},
 };
 
