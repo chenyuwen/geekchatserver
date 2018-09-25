@@ -67,15 +67,15 @@ int get_user_by_name_from_mysql(struct server *sv, const char *username, struct 
 	snprintf(query, sizeof(query),"select username, password, token from "
 		"users where username = '%s'", username);
 	if(sv->dump) mlog("%s\n", query);
-	ret = mysql_query(config->mysql, query);
+	ret = mysql_real_query(config->mysql, query, strlen(query));
 	if(ret < 0) {
-		mlog("mysql_query: %s\n", mysql_error(config->mysql));
+		mlog("mysql_query: %s %d\n", mysql_error(config->mysql), -mysql_errno(config->mysql));
 		return -mysql_errno(config->mysql);
 	}
 
 	result = mysql_store_result(config->mysql);
 	if(result == NULL) {
-		mlog("mysql_store_result: %s\n", mysql_error(config->mysql));
+		mlog("mysql_store_result: %s %d\n", mysql_error(config->mysql),  -mysql_errno(config->mysql));
 		return -mysql_errno(config->mysql);
 	}
 
