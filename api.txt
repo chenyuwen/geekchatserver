@@ -1,0 +1,95 @@
+一. 获取登录随机数。
+方法：com.login.seed.request
+
+参数：
+(1) username: 即将要进行登录验证的用户名
+
+返回值：
+(1) method: com.login.seed.respond
+(2) username: 获取的随机数的用户名
+(3) seed: 随机数
+(4) errno: 错误码, 0x0000, 0xFF01
+
+
+二. 登录认证。
+方法：com.login.request
+
+参数：
+(1) username: 需要进行认证登录的用户名
+(2) crypto: sha256(seed + password)
+
+返回值：
+(1) method: com.login.respond
+(2) username: 进行认证登录的用户名
+(3) token: 用户令牌
+(4) errno: 错误码, 0x0000, 0xFF01, 0xFF02, 0xFF04
+
+
+三. 发送信息。
+方法：com.message.sendto.request
+
+参数：
+(1) token: 登录时，服务器提供给客户端的token
+(2) sendto: 需要发送给谁
+(3) message: 需要发送的信息
+
+返回值：
+(1) com.message.sendto.respond
+(2) errno: 错误码
+(3) uuid: 发送的消息的唯一id
+
+
+四. 接收消息(从服务器到客户端)。
+方法： com.message.recv.request
+
+参数(服务器到客户端）：
+(1) method: com.message.recv.request
+(2) from: 来自谁的信息
+(3) to: 接收方
+(4) uuid: 信息的唯一id
+(5) message: 信息
+
+返回值(客户端到服务器)：
+(1) method: com.message.recv.respond
+(2) token: 客户端的token
+(3) uuid: 接收到的消息的uuid
+(4) errno:　错误码, 0x0000
+
+
+五. 通过令牌退出登录。
+方法： com.logout.bytoken.request
+
+参数：
+(1) token: 用户令牌
+
+返回值：
+(1) method: com.logout.bytoken.respond
+(2) errno:　错误码, 0x0000
+
+
+五. 强制登录(会导致在线的账户强制下线)。
+方法： com.login.force.request
+
+参数：(参考com.login.request)
+
+返回值：(参考com.login.request)
+
+
+六. 心跳。
+方法： com.heartbeat.request
+
+参数:
+(1) token: 用户令牌
+
+返回值:
+(1) method: com.heartbeat.respond
+(2) errno: 错误码，0x0000
+
+
+错误码表, 都为负数：
+(0) 0x0000 操作成功。
+(1) 0xFF01 未知错误。
+(2) 0xFF02 用户已登录。
+(3) 0xFF03 用户不存在。
+(4) 0xFF04 用户名或密码错误。
+(5) 0xFF05 用户被强制下线。

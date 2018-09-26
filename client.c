@@ -28,6 +28,7 @@ struct client_struct {
 	unsigned char token[100];
 	int fd;
 
+	int recv_offset;
 	unsigned char recv_buffer[4096], send_buffer[4096];
 };
 
@@ -36,8 +37,7 @@ int recv_json_object(struct client_struct *ct, json_t **json)
 	struct raw_packet *recv_packet = (void *)ct->recv_buffer;
 	json_t *recv_json = NULL;
 	json_error_t json_err;
-	int ret = 0;
-	const char *from, *message;
+	int ret = 0, packet_size = 0;
 
 	if(CLIENT_DUMP) memset(ct->recv_buffer, 0, sizeof(ct->recv_buffer));
 	ret = read(ct->fd, ct->recv_buffer, sizeof(ct->recv_buffer));
@@ -45,6 +45,7 @@ int recv_json_object(struct client_struct *ct, json_t **json)
 		perror("read\n");
 		goto out;
 	}
+	ct->recv_offset += ret;
 
 	if(CLIENT_DUMP) printf("%s\n", recv_packet->buffer);
 	recv_json = json_loadb(recv_packet->buffer, recv_packet->head.packet_len, 0, &json_err);
@@ -54,9 +55,57 @@ int recv_json_object(struct client_struct *ct, json_t **json)
 		goto out;
 	}
 	*json = recv_json;
+	packet_size = sizeof(struct raw_packet_head) + recv_packet->head.packet_len;
+	ct->recv_offset -= packet_size;
 
 out:
 	return ret;
+}
+
+int recv_buffer(struct client_struct *ct)
+{
+	struct raw_packet *recv_packet = (void *)ct->recv_buffer;
+	int ret = 0;
+
+	ret = read(ct->fd, ct->recv_buffer, sizeof(ct->recv_buffer));
+	if(ret < 0) {
+		perror("read\n");
+		goto out;
+	}
+	ct->recv_offset += ret;
+
+out:
+	return ret;
+}
+
+int fetch_json(struct client_struct *ct, json_t **json)
+{
+	struct raw_packet *recv_packet = (void *)ct->recv_buffer;
+	json_t *recv_json = NULL;
+	json_error_t json_err;
+	int ret = 0, packet_size = 0;
+
+	if(ct->recv_offset < sizeof(struct raw_packet_head)) {
+		return -1;
+	}
+
+	packet_size = sizeof(struct raw_packet_head) + recv_packet->head.packet_len;
+	if(ct->recv_offset < packet_size) {
+		return -1;
+	}
+
+	recv_json = json_loadb(recv_packet->buffer, recv_packet->head.packet_len, 0, &json_err);
+	if(recv_json == NULL) {
+		printf("It is not a json.\n");
+		ret = -1;
+		goto out;
+	}
+	*json = recv_json;
+	ct->recv_offset -= packet_size;
+	memcpy(ct->recv_buffer, ct->recv_buffer + packet_size, ct->recv_offset);
+
+out:
+	return 0;
 }
 
 int send_json_object(struct client_struct *ct, json_t *json)
@@ -166,20 +215,22 @@ int recv_message(struct client_struct *ct)
 	const char *from, *message;
 	int ret = 0;
 
-	if(recv_json_object(ct, &json) < 0) {
+	if(recv_buffer(ct) < 0) {
 		ret = -1;
 		goto out;
 	}
 
-	from = json_string_value(json_object_get(json, "from"));
-	message = json_string_value(json_object_get(json, "message"));
-	if(from == NULL || message == NULL) {
-		json_delete(json);
-		goto out;
-	}
+	while(fetch_json(ct, &json) >= 0) {
+		from = json_string_value(json_object_get(json, "from"));
+		message = json_string_value(json_object_get(json, "message"));
+		if(from == NULL || message == NULL) {
+			json_delete(json);
+			goto out;
+		}
 
-	printf("%s: %s\n", from, message);
-	json_delete(json);
+		printf("%s: %s\n", from, message);
+		json_delete(json);
+	}
 
 out:
 	return ret;
@@ -218,6 +269,7 @@ int main(int argc, char **argv)
 	if(argc >= 2) {
 		port = atoi(argv[1]);
 	}
+	ct.recv_offset = 0;
 	ct.fd = socket(AF_INET, SOCK_STREAM, 0);
 	if(ct.fd < 0) {
 		perror("socket");
