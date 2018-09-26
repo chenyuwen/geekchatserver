@@ -76,6 +76,44 @@ int get_friends_by_user(struct server *sv, struct user *usr, struct friends **fr
 	return ret;
 }
 
+int insert_friend_to_mysql(struct server *sv, struct user *usr, struct user *friend)
+{
+	struct mysql_config *config = sv->mysql_config;
+	int ret = 0;
+	char query[SERVER_MAX_PACKETS];
+	struct user *tmp = NULL;
+
+	snprintf(query, sizeof(query),"insert into friends(username, friend)"\
+		" values ('%s', '%s')", usr->username, friend->username);
+	if(sv->dump) mlog("%s\n", query);
+	ret = mysql_real_query(config->mysql, query, strlen(query));
+	if(ret < 0) {
+		mlog("mysql_query: %s\n", mysql_error(config->mysql));
+		return -mysql_errno(config->mysql);
+	}
+
+	if(mysql_affected_rows(config->mysql) != 1) {
+		mlog("affected rows is not one.\n");
+		return -1;
+	}
+
+	return ret;
+	return 0;
+}
+
+int make_friend(struct server *sv, struct user *usr, struct user *friend)
+{
+	int ret = 0;
+	ret = insert_friend_to_mysql(sv, usr, friend);
+	if(ret < 0) {
+		goto out;
+	}
+	free_friends(usr);
+
+out:
+	return ret;
+}
+
 int free_friends(struct user *usr)
 {
 	usr->friends.num_of_friends = 0;

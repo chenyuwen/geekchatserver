@@ -14,6 +14,7 @@ int get_friends_by_user(struct server *sv, struct user *usr, struct friends **fr
 int get_friends_by_user_from_mysql(struct server *sv, struct user *usr);
 int free_friends(struct user *usr);
 int friends_put(struct friends *friends);
+int make_friend(struct server *sv, struct user *usr, struct user *friend);
 
 #endif /*__FRIENDS_H__*/
 

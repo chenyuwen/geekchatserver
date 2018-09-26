@@ -225,10 +225,49 @@ int logout_json(struct client_struct *ct)
 	json_delete(json);
 }
 
+int add_friend_json(struct client_struct *ct)
+{
+	json_t *json = json_object();
+	char friend[20];
+
+	scanf("%s", friend);
+
+	json_object_set_new(json, "method", json_string("com.friends.add.request"));
+	json_object_set_new(json, "token", json_string(ct->token));
+	json_object_set_new(json, "friend", json_string(friend));
+
+	send_json_object(ct, json);
+	json_delete(json);
+}
+
+int list_my_friends(struct client_struct *ct)
+{
+	json_t *json = json_object();
+	int len = 0, i = 0;
+	json_t *obj, *array;
+
+	json_object_set_new(json, "method", json_string("com.friends.list.request"));
+	json_object_set_new(json, "token", json_string(ct->token));
+	send_json_object(ct, json);
+	json_delete(json);
+
+	recv_json_object(ct, &json);
+	array = json_object_get(json, "friends");
+	printf("Friends:\n");
+	json_array_foreach(array, i, obj) {
+		printf("%s\t", json_string_value(obj));
+	}
+	printf("\n");
+	json_delete(json);
+	return 0;
+}
+
 int show_menu(struct client_struct *ct)
 {
 	printf("\nsend: send message.\n");
+	printf("friends: show your friends.\n");
 	printf("logout: logout.\n");
+	printf("addfriend: add friend.\n");
 	return 0;
 }
 
@@ -241,6 +280,10 @@ int recv_stdin(struct client_struct *ct)
 	} else if(!strcmp((char *)method, (char *)"logout")) {
 		logout_json(ct);
 		ct->thread_loop = 0;
+	} else if(!strcmp((char *)method, (char *)"friends")) {
+		list_my_friends(ct);
+	} else if(!strcmp((char *)method, (char *)"addfriend")) {
+		add_friend_json(ct);
 	}
 	show_menu(ct);
 
@@ -281,28 +324,6 @@ int recv_message(struct client_struct *ct)
 
 out:
 	return ret;
-}
-
-int list_my_friends(struct client_struct *ct)
-{
-	json_t *json = json_object();
-	int len = 0, i = 0;
-	json_t *obj, *array;
-
-	json_object_set_new(json, "method", json_string("com.friends.list.request"));
-	json_object_set_new(json, "token", json_string(ct->token));
-	send_json_object(ct, json);
-	json_delete(json);
-
-	recv_json_object(ct, &json);
-	array = json_object_get(json, "friends");
-	printf("Friends:\n");
-	json_array_foreach(array, i, obj) {
-		printf("%s\t", json_string_value(obj));
-	}
-	printf("\n");
-	json_delete(json);
-	return 0;
 }
 
 int main(int argc, char **argv)
@@ -347,7 +368,6 @@ int main(int argc, char **argv)
 	if(login_to_server(&ct) < 0) {
 		goto out;
 	}
-	list_my_friends(&ct);
 
 	epollfd = epoll_create(MAX_EVENTS);
 	event.events = EPOLLIN | EPOLLET;
