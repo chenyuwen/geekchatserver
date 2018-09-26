@@ -19,6 +19,7 @@ extern int method_com_register_request(struct server *sv, struct client *ct, jso
 extern int method_com_user_changeinfo_request(struct server *sv, struct client *ct, json_t *json);
 extern int method_com_user_info_request(struct server *sv, struct client *ct, json_t *json);
 extern int method_com_user_password_request(struct server *sv, struct client *ct, json_t *json);
+extern int method_com_message_recv_respond(struct server *sv, struct client *ct, json_t *json);
 
 static struct method methods[] = {
 	{
@@ -76,6 +77,10 @@ static struct method methods[] = {
 	{
 		"com.user.password.request",
 		method_com_user_password_request,
+	},
+	{
+		"com.message.recv.respond",
+		method_com_message_recv_respond,
 	},
 };
 

@@ -24,7 +24,7 @@ int build_simplify_json(json_t *json, const char *method, int err)
 	json_object_del(json, "errno");
 
 	json_object_set_new(json, "method", json_string(method));
-	json_object_set_new(json, "errno", json_integer(errno));
+	json_object_set_new(json, "errno", json_integer(err));
 	return 0;
 }
 
@@ -33,7 +33,7 @@ int respond_method_not_found(struct server *sv, struct client *ct, json_t *json)
 	json_t *rsp_json = json_object();
 	struct raw_packet *packet = malloc_raw_packet(sv, ct);
 
-	build_simplify_json(rsp_json, "null", 6);
+	build_simplify_json(rsp_json, "null", -SERR_NOT_METHOD);
 	json_to_raw_packet(rsp_json, PACKET_TYPE_UNENCRY, packet);
 	respond_raw_packet(sv, ct, packet);
 

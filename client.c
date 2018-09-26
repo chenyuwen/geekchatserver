@@ -211,8 +211,8 @@ int recv_stdin(struct client_struct *ct)
 
 int recv_message(struct client_struct *ct)
 {
-	json_t *json = json_object();
-	const char *from, *message;
+	json_t *json = NULL, *send_json = NULL;
+	const char *from, *message, *uuid;
 	int ret = 0;
 
 	if(recv_buffer(ct) < 0) {
@@ -223,13 +223,22 @@ int recv_message(struct client_struct *ct)
 	while(fetch_json(ct, &json) >= 0) {
 		from = json_string_value(json_object_get(json, "from"));
 		message = json_string_value(json_object_get(json, "message"));
-		if(from == NULL || message == NULL) {
+		uuid = json_string_value(json_object_get(json, "uuid"));
+		if(from == NULL || message == NULL || uuid == NULL) {
 			json_delete(json);
 			goto out;
 		}
 
+		send_json = json_object();
+		json_object_set_new(send_json, "method", json_string("com.message.recv.respond"));
+		json_object_set_new(send_json, "uuid", json_string(uuid));
+		json_object_set_new(send_json, "token", json_string(ct->token));
+		json_object_set_new(send_json, "errno", json_integer(0));
+		send_json_object(ct, send_json);
+
 		printf("%s: %s\n", from, message);
 		json_delete(json);
+		json_delete(send_json);
 	}
 
 out:

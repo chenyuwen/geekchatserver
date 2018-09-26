@@ -28,6 +28,7 @@ int init_users_map(struct server *sv)
 int user_get(struct server *sv, struct user *usr)
 {
 	usr->use_cnt++;
+	printf("user_get usr:%s cnt:%d\n", usr->username, usr->use_cnt);
 	if(is_timer_effective(sv, &usr->timer)) {
 		kick_timer(sv, &usr->timer);
 	}
@@ -37,6 +38,7 @@ int user_get(struct server *sv, struct user *usr)
 int user_put(struct server *sv, struct user *usr)
 {
 	usr->use_cnt--;
+	printf("user_put usr:%s cnt:%d\n", usr->username, usr->use_cnt);
 	if(usr->use_cnt == 0) {
 		mlog("Free user:%s\n", usr->username);
 		hashmap_remove(sv->users_map, usr->username);

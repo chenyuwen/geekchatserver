@@ -86,7 +86,6 @@ int method_com_message_sendto_request(struct server *sv, struct client *ct, json
 	}
 
 	if(!is_token_effective(sv, from)) {
-		/*TODO: write the message to databases*/
 		mlog("Warning: The user %s token is not effective\n", from->username);
 		res_ret = -SERR_FORCE_LOGOUT;
 		user_put(sv, from);

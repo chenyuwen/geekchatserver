@@ -7,7 +7,7 @@
 #define SERR_USR_NOT_EXIST 0xFF03
 #define SERR_PWD_ERR 0xFF04
 #define SERR_FORCE_LOGOUT 0xFF05
-#define SERR_NOT_METHOD (6)
+#define SERR_NOT_METHOD 0xFF06
 #define SERR_ARG 0xFF07
 
 #endif /*__SERVER_ERRNO_H__*/

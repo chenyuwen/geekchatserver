@@ -87,6 +87,8 @@ int send_message_handler(struct cbtimer *timer, void *arg)
 
 		send_message_to(looper->sv, from_usr, looper->ct->usr,
 			(const char *)row[0], (char *)row[2]);
+
+		user_put(looper->sv, from_usr);
 	}
 	mysql_free_result(result);
 
