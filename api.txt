@@ -86,6 +86,47 @@
 (2) errno: 错误码，0x0000
 
 
+七. 注册账户。
+方法： com.register.request
+
+参数:
+(1) username: 用户名
+(2) password: 密码
+
+返回值:
+(1) method: com.register.respond
+(2) errno: 错误码，0x0000
+
+
+八. 添加好友。
+方法： com.friends.add.request
+
+参数:
+(1) token: 用户令牌
+(2) friend: 朋友名字
+
+返回值:
+(1) method: com.friends.add.respond
+(2) errno: 错误码，0x0000
+
+
+九. 获取好友列表。
+方法： com.friends.list.request
+
+参数:
+(1) token: 用户令牌
+(2) pages: 朋友列表页
+
+返回值:
+(1) method: com.friends.add.respond
+(2) friends: 好友列表数组
+(3) update_time: 最新更新时间，可根据此查看好友列表是否最新
+(4) nums_friends: 好友数量
+(5) pages: 第几个好友列表
+(6) nums_pages: 好友列表数量
+(7) errno: 错误码，0x0000
+
+
 错误码表, 都为负数：
 (0) 0x0000 操作成功。
 (1) 0xFF01 未知错误。

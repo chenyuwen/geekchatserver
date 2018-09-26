@@ -240,6 +240,21 @@ int add_friend_json(struct client_struct *ct)
 	json_delete(json);
 }
 
+int register_json(struct client_struct *ct)
+{
+	json_t *json = json_object();
+	char username[20], password[20];
+
+	scanf("%s%s", username, password);
+
+	json_object_set_new(json, "method", json_string("com.register.request"));
+	json_object_set_new(json, "username", json_string(username));
+	json_object_set_new(json, "password", json_string(password));
+
+	send_json_object(ct, json);
+	json_delete(json);
+}
+
 int list_my_friends(struct client_struct *ct)
 {
 	json_t *json = json_object();
@@ -268,6 +283,7 @@ int show_menu(struct client_struct *ct)
 	printf("friends: show your friends.\n");
 	printf("logout: logout.\n");
 	printf("addfriend: add friend.\n");
+	printf("register: register.\n");
 	return 0;
 }
 
@@ -284,6 +300,8 @@ int recv_stdin(struct client_struct *ct)
 		list_my_friends(ct);
 	} else if(!strcmp((char *)method, (char *)"addfriend")) {
 		add_friend_json(ct);
+	} else if(!strcmp((char *)method, (char *)"register")) {
+		register_json(ct);
 	}
 	show_menu(ct);
 
