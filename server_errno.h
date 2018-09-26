@@ -1,0 +1,14 @@
+#ifndef __SERVER_ERRNO_H__
+#define __ERRVER_ERRNO_H__
+
+#define SERR_SUCCESS 0x0000
+#define SERR_ERR 0xFF01
+#define SERR_IS_ONLINE 0xFF02
+#define SERR_USR_NOT_EXIST 0xFF03
+#define SERR_PWD_ERR 0xFF04
+#define SERR_FORCE_LOGOUT 0xFF05
+#define SERR_NOT_METHOD (6)
+#define SERR_ARG 0xFF07
+
+#endif /*__SERVER_ERRNO_H__*/
+

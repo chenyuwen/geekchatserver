@@ -16,26 +16,24 @@
 #include "packet.h"
 #include "server.h"
 #include "mlog.h"
+#include "server_errno.h"
 
-int build_not_found_json(struct server *sv, struct client *ct, json_t *json,
-	const char *method)
+int build_simplify_json(json_t *json, const char *method, int err)
 {
 	json_object_del(json, "method");
-	json_object_del(json, "info");
-	json_object_del(json, "status");
+	json_object_del(json, "errno");
 
 	json_object_set_new(json, "method", json_string(method));
-	json_object_set_new(json, "info", json_string("not_found"));
-	json_object_set_new(json, "status", json_false());
+	json_object_set_new(json, "errno", json_integer(errno));
 	return 0;
 }
 
-int respond_not_found(struct server *sv, struct client *ct, json_t *json)
+int respond_method_not_found(struct server *sv, struct client *ct, json_t *json)
 {
 	json_t *rsp_json = json_object();
 	struct raw_packet *packet = malloc_raw_packet(sv, ct);
 
-	build_not_found_json(sv, ct, rsp_json, "null");
+	build_simplify_json(rsp_json, "null", 6);
 	json_to_raw_packet(rsp_json, PACKET_TYPE_UNENCRY, packet);
 	respond_raw_packet(sv, ct, packet);
 
@@ -64,7 +62,7 @@ int call_method(struct server *sv, struct client *ct, json_t *json, const char *
 	if(sv->dump) printf("Enter:%s\n", method);
 	hashmap_get(sv->methods_map, (char *)method, (any_t *)&handler);
 	if(handler == NULL) {
-		respond_not_found(sv, ct, json);
+		respond_method_not_found(sv, ct, json);
 		ret = -1;
 		goto out;
 	}

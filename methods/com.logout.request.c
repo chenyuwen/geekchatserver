@@ -16,7 +16,12 @@
 #include "../packet.h"
 #include "../server.h"
 #include "../users.h"
+#include "../server_errno.h"
+#include "../mlog.h"
+#include "../tokens.h"
 #include "methods.h"
+
+#define THIS_METHOD_RESPOND_NAME "com.logout.respond"
 
 int method_com_logout_request(struct server *sv, struct client *ct, json_t *json)
 {
@@ -25,34 +30,32 @@ int method_com_logout_request(struct server *sv, struct client *ct, json_t *json
 	struct raw_packet *packet = malloc_raw_packet(sv, ct);
 	const char *token = NULL;
 	struct user *usr = NULL;
-	int ret = 0;
-
-	json_object_set_new(rsp_json, "method", json_string("com.logout.respond"));
-	json_object_set_new(rsp_json, "status", json_true());
+	int ret = 0, res_ret = SERR_SUCCESS;
 
 	token = json_string_value(json_object_get(json, "token"));
 	if(token == NULL) {
 		mlog("Warning: The message did not have token.\n");
-		build_not_found_json(sv, ct, rsp_json, "com.logout.respond");
+		res_ret = -SERR_ARG;
 		goto respond;
 	}
 
 	ret = get_usr_by_token(sv, ct, token, &usr);
 	if(ret < 0 || usr == NULL) {
 		mlog("Warning: The token was invaild.\n");
-		build_not_found_json(sv, ct, rsp_json, "com.logout.respond");
+		res_ret = -SERR_FORCE_LOGOUT;
 		goto respond;
 	}
 
 	if(!is_token_effective(sv, usr)) {
 		/*TODO: write the message to databases*/
 		mlog("Warning: The user %s token is not effective\n", usr->username);
-		build_not_found_json(sv, ct, rsp_json, "com.logout.respond");
+		res_ret = -SERR_FORCE_LOGOUT;
 		user_put(sv, usr);
 		goto respond;
 	}
 
 respond:
+	build_simplify_json(rsp_json, THIS_METHOD_RESPOND_NAME, res_ret);
 	json_to_raw_packet(rsp_json, PACKET_TYPE_UNENCRY, packet);
 	respond_raw_packet(sv, ct, packet);
 

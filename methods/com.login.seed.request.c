@@ -19,7 +19,10 @@
 #include "../err.h"
 #include "../hex.h"
 #include "../mlog.h"
+#include "../server_errno.h"
 #include "methods.h"
+
+#define THIS_METHOD_RESPOND_NAME "com.login.seed.respond"
 
 int build_new_seed(struct server *sv, struct user *usr)
 {
@@ -40,35 +43,34 @@ int method_com_login_seed_request(struct server *sv, struct client *ct, json_t *
 	struct user *usr = NULL;
 	const char *username = NULL;
 	char *token;
-	int ret = 0;
+	int ret = 0, res_ret = SERR_SUCCESS;
 
 	username = json_string_value(json_object_get(json, "username"));
 	if(username == NULL) {
 		mlog("Warning: The packet did not have username.\n");
-		build_not_found_json(sv, ct, rsp_json, "com.login.seed.respond");
+		res_ret = -SERR_ARG;
 		goto respond;
 	}
 	ret = get_user_by_name(sv, username, &usr);
 	if(ret < 0) {
 		/*Can't find this user.*/
 		mlog("Warning: The user '%s' did not registered.\n", username);
-		build_not_found_json(sv, ct, rsp_json, "com.login.seed.respond");
+		res_ret = -SERR_USR_NOT_EXIST; /*TODO:*/
 		goto respond;
 	}
 
 	if(build_new_seed(sv, usr) < 0) {
-		build_not_found_json(sv, ct, rsp_json, "com.login.seed.respond");
 		user_put(sv, usr);
+		res_ret = -SERR_ARG;
 		goto respond;
 	}
 	usr->is_seed_existed = 1;
-	json_object_set_new(rsp_json, "method", json_string("com.login.seed.respond"));
 	json_object_set_new(rsp_json, "seed", json_string(usr->seed));
 	json_object_set_new(rsp_json, "username", json_string(usr->username));
-	json_object_set_new(rsp_json, "status", json_true());
 	user_put(sv, usr);
 
 respond:
+	build_simplify_json(rsp_json, THIS_METHOD_RESPOND_NAME, res_ret);
 	json_to_raw_packet(rsp_json, PACKET_TYPE_UNENCRY, packet);
 	respond_raw_packet(sv, ct, packet);
 

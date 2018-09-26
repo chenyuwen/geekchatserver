@@ -20,7 +20,10 @@
 #include "../hex.h"
 #include "../mlog.h"
 #include "../tokens.h"
+#include "../server_errno.h"
 #include "methods.h"
+
+#define THIS_METHOD_RESPOND_NAME "com.login.respond"
 
 int method_com_login_request(struct server *sv, struct client *ct, json_t *json)
 {
@@ -32,24 +35,24 @@ int method_com_login_request(struct server *sv, struct client *ct, json_t *json)
 	unsigned char hex_out[SHA256_LENS * 2];
 	SHA256_CTX ctx;
 	struct user *usr;
-	int ret = 0;
+	int ret = 0, res_ret = SERR_SUCCESS;
 
 	username = json_string_value(json_object_get(json, "username"));
 	if(username == NULL) {
 		mlog("Warning: The packet did not have username.\n");
-		build_not_found_json(sv, ct, rsp_json, "com.login.respond");
+		res_ret = -SERR_ARG;
 		goto respond;
 	}
 	crypto = json_string_value(json_object_get(json, "crypto"));
 	if(crypto == NULL) {
 		mlog("Warning: The packet did not have crypto.\n");
-		build_not_found_json(sv, ct, rsp_json, "com.login.respond");
+		res_ret = -SERR_ARG;
 		goto respond;
 	}
 	if(strlen(crypto) != sizeof(hex_out)) {
 		mlog("Warning: The crypto length is mistake.\n");
 		if(sv->dump) mlog("%s\n", crypto);;
-		build_not_found_json(sv, ct, rsp_json, "com.login.respond");
+		res_ret = -SERR_ARG;
 		goto respond;
 	}
 
@@ -57,21 +60,14 @@ int method_com_login_request(struct server *sv, struct client *ct, json_t *json)
 	if(ret < 0) {
 		/*Can't find this user.*/
 		mlog("Warning: The user '%s' did not registered.\n", username);
-		build_not_found_json(sv, ct, rsp_json, "com.login.respond");
+		res_ret = -SERR_PWD_ERR;
 		goto respond;
 	}
 
 	if(!usr->is_seed_existed) {
 		mlog("Warning: The user '%s' did out getting the seed.\n", username);
-		build_not_found_json(sv, ct, rsp_json, "com.login.respond");
 		user_put(sv, usr);
-		goto respond;
-	}
-
-	if(usr->is_online) {
-		mlog("Warning: The user '%s' is online.\n", username);
-		build_not_found_json(sv, ct, rsp_json, "com.login.online.respond");
-		user_put(sv, usr);
+		res_ret = -SERR_PWD_ERR;
 		goto respond;
 	}
 
@@ -81,21 +77,27 @@ int method_com_login_request(struct server *sv, struct client *ct, json_t *json)
 	sha256_final(&ctx, crypto_out);
 	hex_to_ascii(hex_out, crypto_out, sizeof(crypto_out));
 	if(memcmp(hex_out, crypto, sizeof(hex_out))) {
-		build_not_found_json(sv, ct, rsp_json, "com.login.failed.respond");
 		user_put(sv, usr);
+		res_ret = -SERR_PWD_ERR;
+		goto respond;
+	}
+
+	if(usr->is_online) {
+		mlog("Warning: The user '%s' is online.\n", username);
+		user_put(sv, usr);
+		res_ret = -SERR_IS_ONLINE;
 		goto respond;
 	}
 
 	alloc_new_token(sv, usr);
-	json_object_set_new(rsp_json, "method", json_string("com.login.respond"));
 	json_object_set_new(rsp_json, "token", json_string(usr->token));
-	json_object_set_new(rsp_json, "status", json_true());
 	usr->is_online = 1;
 	usr->is_seed_existed = 0;
 	bind_user_to_client(sv, usr, ct);
 	user_put(sv, usr);
 
 respond:
+	build_simplify_json(rsp_json, THIS_METHOD_RESPOND_NAME, res_ret);
 	json_to_raw_packet(rsp_json, PACKET_TYPE_UNENCRY, packet);
 	respond_raw_packet(sv, ct, packet);
 

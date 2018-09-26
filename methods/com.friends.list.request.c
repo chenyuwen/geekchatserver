@@ -19,7 +19,10 @@
 #include "../tokens.h"
 #include "../mlog.h"
 #include "../friends.h"
+#include "../server_errno.h"
 #include "methods.h"
+
+#define THIS_METHOD_RESPOND_NAME "com.friends.list.respond"
 
 int method_com_friends_list_request(struct server *sv, struct client *ct, json_t *json)
 {
@@ -29,29 +32,26 @@ int method_com_friends_list_request(struct server *sv, struct client *ct, json_t
 	const char *token, *tmp;
 	struct user *usr;
 	struct friends *friends = NULL;
-	int ret = 0, i = 0;
-
-	json_object_set_new(rsp_json, "method", json_string("com.friends.list.respond"));
-	json_object_set_new(rsp_json, "status", json_true());
+	int ret = 0, i = 0, res_ret = SERR_SUCCESS;
 
 	token = json_string_value(json_object_get(json, "token"));
 	if(token == NULL) {
 		mlog("Warning: The message did not have token.\n");
-		build_not_found_json(sv, ct, rsp_json, "com.friends.list.respond");
+		res_ret = -SERR_ARG;
 		goto respond;
 	}
 
 	ret = get_usr_by_token(sv, ct, token, &usr);
 	if(ret < 0 || usr == NULL) {
 		mlog("Warning: The token was invaild.\n");
-		build_not_found_json(sv, ct, rsp_json, "com.friends.list.respond");
+		res_ret = -SERR_FORCE_LOGOUT;
 		goto respond;
 	}
 
 	ret = get_friends_by_user(sv, usr, &friends);
 	if(ret < 0 || friends == NULL) {
 		mlog("Warning: The token was invaild.\n");
-		build_not_found_json(sv, ct, rsp_json, "com.friends.list.respond");
+		res_ret = -SERR_FORCE_LOGOUT;
 		user_put(sv, usr);
 		goto respond;
 	}
@@ -66,6 +66,7 @@ int method_com_friends_list_request(struct server *sv, struct client *ct, json_t
 	user_put(sv, usr);
 
 respond:
+	build_simplify_json(rsp_json, THIS_METHOD_RESPOND_NAME, res_ret);
 	json_to_raw_packet(rsp_json, PACKET_TYPE_UNENCRY, packet);
 	respond_raw_packet(sv, ct, packet);
 
