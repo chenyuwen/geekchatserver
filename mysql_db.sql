@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS users (
     `sex` ENUM("man", "woman", "null"),
     `token` VARCHAR(32),
     `token_timestamp` BIGINT UNSIGNED,
-    `is_login` TINYINT(1) DEFAULT "0",
+    `token_valid` TINYINT(1) DEFAULT "0",
     UNIQUE KEY `users_uni` (`username`)
 ) DEFAULT CHARSET=utf8;
 ALTER TABLE geekchat.users AUTO_INCREMENT = 1;

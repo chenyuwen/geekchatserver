@@ -19,7 +19,7 @@
 #define SERVER_DEFAULT_PORT 1200
 //#define SERVER_DEFAULT_ADDR "45.32.82.181"
 #define SERVER_DEFAULT_ADDR "127.0.0.1"
-#define CLIENT_DUMP 1
+#define CLIENT_DUMP 0
 #define STDIN 0
 
 struct client_struct {
@@ -27,6 +27,7 @@ struct client_struct {
 	unsigned char username[21];
 	unsigned char token[100];
 	int fd;
+	int thread_loop;
 
 	int recv_offset;
 	unsigned char recv_buffer[4096], send_buffer[4096];
@@ -194,11 +195,15 @@ out:
 	return ret;
 }
 
-int recv_stdin(struct client_struct *ct)
+int scan_send_message(struct client_struct *ct)
 {
 	json_t *json = json_object();
 	unsigned char sendto[30], message[100];
-	scanf("%s%s", sendto, message);
+	printf("The message send to:\n");
+	scanf("%s", sendto);
+	printf("The message body:\n");
+	scanf("%s", message);
+
 	json_object_set_new(json, "method", json_string("com.message.sendto.request"));
 	json_object_set_new(json, "message", json_string(message));
 	json_object_set_new(json, "token", json_string(ct->token));
@@ -206,6 +211,39 @@ int recv_stdin(struct client_struct *ct)
 
 	send_json_object(ct, json);
 	json_delete(json);
+	return 0;
+}
+
+int logout_json(struct client_struct *ct)
+{
+	json_t *json = json_object();
+
+	json_object_set_new(json, "method", json_string("com.logout.bytoken.request"));
+	json_object_set_new(json, "token", json_string(ct->token));
+
+	send_json_object(ct, json);
+	json_delete(json);
+}
+
+int show_menu(struct client_struct *ct)
+{
+	printf("\nsend: send message.\n");
+	printf("logout: logout.\n");
+	return 0;
+}
+
+int recv_stdin(struct client_struct *ct)
+{
+	unsigned char method[20];
+	scanf("%s", method);
+	if(!strcmp((char *)method, (char *)"send")) {
+		scan_send_message(ct);
+	} else if(!strcmp((char *)method, (char *)"logout")) {
+		logout_json(ct);
+		ct->thread_loop = 0;
+	}
+	show_menu(ct);
+
 	return 0;
 }
 
@@ -272,13 +310,14 @@ int main(int argc, char **argv)
 	int ret, i = 0, port = SERVER_DEFAULT_PORT;
 	struct sockaddr_in serveraddr;
 	struct client_struct ct;
-	int epollfd = 0, thread_loop = 1;
+	int epollfd = 0;
 	struct epoll_event event, eventlist[MAX_EVENTS];
 
 	if(argc >= 2) {
 		port = atoi(argv[1]);
 	}
 	ct.recv_offset = 0;
+	ct.thread_loop = 1;
 	ct.fd = socket(AF_INET, SOCK_STREAM, 0);
 	if(ct.fd < 0) {
 		perror("socket");
@@ -325,7 +364,8 @@ int main(int argc, char **argv)
 		return 0;
 	}
 
-	while(thread_loop) {
+	show_menu(&ct);
+	while(ct.thread_loop) {
 		ret = epoll_wait(epollfd, eventlist, MAX_EVENTS, 3000);
 		if(ret < 0) {
 			perror("epoll_wait");
