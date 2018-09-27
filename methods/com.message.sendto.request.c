@@ -36,13 +36,13 @@ int write_message_to_mysql(struct server *sv, struct user *from, struct user *to
 	snprintf(query, sizeof(query),"insert into messages(uuid, from_user, to_user, message)"\
 		" values ('%s', '%s', '%s', '%s')", uuid, from->username, to->username, message);
 	if(sv->dump) mlog("%s\n", query);
-	ret = mysql_real_query(config->mysql, query, strlen(query));
+	ret = mysql_real_query_affected(config, query);
 	if(ret < 0) {
 		mlog("mysql_query: %s\n", mysql_error(config->mysql));
-		return -mysql_errno(config->mysql);
+		return ret;
 	}
 
-	if(mysql_affected_rows(config->mysql) != 1) {
+	if(ret != 1) {
 		mlog("affected rows is not one.\n");
 		return -1;
 	}

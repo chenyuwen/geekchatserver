@@ -16,16 +16,10 @@ int get_friends_by_user_from_mysql(struct server *sv, struct user *usr)
 	snprintf(query, sizeof(query),"select username, friend from "
 		"friends where username = '%s'", usr->username);
 	if(sv->dump) mlog("%s\n", query);
-	ret = mysql_query(config->mysql, query);
-	if(ret < 0) {
+	ret = mysql_real_query_result(config, query, &result);
+	if(ret < 0 || result == NULL) {
 		mlog("mysql_query: %s\n", mysql_error(config->mysql));
-		return -mysql_errno(config->mysql);
-	}
-
-	result = mysql_store_result(config->mysql);
-	if(result == NULL) {
-		mlog("mysql_store_result: %s\n", mysql_error(config->mysql));
-		return -mysql_errno(config->mysql);
+		return ret;
 	}
 
 	num_of_rows = mysql_num_rows(result);
@@ -86,19 +80,18 @@ int insert_friend_to_mysql(struct server *sv, struct user *usr, struct user *fri
 	snprintf(query, sizeof(query),"insert into friends(username, friend)"\
 		" values ('%s', '%s')", usr->username, friend->username);
 	if(sv->dump) mlog("%s\n", query);
-	ret = mysql_real_query(config->mysql, query, strlen(query));
+	ret = mysql_real_query_affected(config, query);
 	if(ret < 0) {
 		mlog("mysql_query: %s\n", mysql_error(config->mysql));
-		return -mysql_errno(config->mysql);
+		return ret;
 	}
 
-	if(mysql_affected_rows(config->mysql) != 1) {
+	if(ret != 1) {
 		mlog("affected rows is not one.\n");
 		return -1;
 	}
 
 	return ret;
-	return 0;
 }
 
 int make_friend(struct server *sv, struct user *usr, struct user *friend)

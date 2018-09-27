@@ -21,13 +21,13 @@ int store_token_to_mysql(struct server *sv, struct user *usr)
 	snprintf(query, sizeof(query),"update users set token = '%s', token_valid = '1'" \
 		" where username = '%s'", usr->token, usr->username);
 	if(sv->dump) mlog("%s\n", query);
-	ret = mysql_real_query(config->mysql, query, strlen(query));
+	ret = mysql_real_query_affected(config, query);
 	if(ret < 0) {
 		mlog("mysql_query: %s\n", mysql_error(config->mysql));
-		return -mysql_errno(config->mysql);
+		return ret;
 	}
 
-	if(mysql_affected_rows(config->mysql) != 1) {
+	if(ret != 1) {
 		mlog("affected rows is not one.\n");
 		return -1;
 	}
@@ -47,16 +47,10 @@ int get_username_by_token_from_mysql(struct server *sv, const char *token,
 	snprintf(query, sizeof(query),"select username, token from users" \
 		" where token = '%s' and token_valid = '1'", token);
 	if(sv->dump) mlog("%s\n", query);
-	ret = mysql_real_query(config->mysql, query, strlen(query));
-	if(ret < 0) {
+	ret = mysql_real_query_result(config, query, &result);
+	if(ret < 0 || result == NULL) {
 		mlog("mysql_query: %s\n", mysql_error(config->mysql));
-		return -mysql_errno(config->mysql);
-	}
-
-	result = mysql_store_result(config->mysql);
-	if(result == NULL) {
-		mlog("mysql_store_result: %s\n", mysql_error(config->mysql));
-		return -mysql_errno(config->mysql);
+		return ret;
 	}
 
 	if(!mysql_num_rows(result)) {

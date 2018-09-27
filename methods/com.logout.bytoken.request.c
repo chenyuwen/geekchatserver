@@ -32,13 +32,13 @@ int invalid_token_to_mysql(struct server *sv, struct user *usr)
 	snprintf(query, sizeof(query),"update users set token = '%s', token_valid = '1'" \
 		" where username = '%s'", "", usr->username);
 	if(sv->dump) mlog("%s\n", query);
-	ret = mysql_real_query(config->mysql, query, strlen(query));
+	ret = mysql_real_query_affected(config, query);
 	if(ret < 0) {
 		mlog("mysql_query: %s\n", mysql_error(config->mysql));
-		return -mysql_errno(config->mysql);
+		return ret;
 	}
 
-	if(mysql_affected_rows(config->mysql) != 1) {
+	if(ret != 1) {
 		mlog("affected rows is not one.\n");
 		return -1;
 	}

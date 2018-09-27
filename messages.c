@@ -42,15 +42,9 @@ int get_message_from_mysql(struct server *sv, struct user *to_usr, MYSQL_RES **r
 	snprintf(query, sizeof(query),"select uuid, from_user, message from messages" \
 		" where to_user = '%s' and have_read = '0'", to_usr->username);
 	if(sv->dump) mlog("%s\n", query);
-	ret = mysql_real_query(config->mysql, query, strlen(query));
-	if(ret < 0) {
+	ret = mysql_real_query_result(config, query, &tmp);
+	if(ret < 0 || tmp == NULL) {
 		mlog("mysql_query: %s\n", mysql_error(config->mysql));
-		return -mysql_errno(config->mysql);
-	}
-
-	tmp = mysql_store_result(config->mysql);
-	if(tmp == NULL) {
-		mlog("mysql_store_result: %s\n", mysql_error(config->mysql));
 		return -mysql_errno(config->mysql);
 	}
 

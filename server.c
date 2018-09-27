@@ -200,7 +200,7 @@ int main(int argc, char **argv)
 	sv->mysql_config = &default_mysql_config;
 	sv->dump = SERVER_DUMP_BUFFER;
 	init_timer(sv);
-	init_mlog(sv);
+//	init_mlog(sv);
 	init_token(sv);
 	init_methods_maps(sv);
 	init_users_map(sv);

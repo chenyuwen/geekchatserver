@@ -13,5 +13,7 @@ struct mysql_config {
 
 int mysql_test_connection(struct server *sv);
 int init_mysql(struct server *sv);
+int mysql_real_query_result(struct mysql_config *config, const char *query, MYSQL_RES **result);
+int mysql_real_query_affected(struct mysql_config *config, const char *query);
 #endif /*__MYSQL_CONNECTOR_H__*/
 
