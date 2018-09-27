@@ -17,8 +17,8 @@
 #include "mlog.h"
 
 #define SERVER_DEFAULT_PORT 1200
-//#define SERVER_DEFAULT_ADDR "45.32.82.181"
-#define SERVER_DEFAULT_ADDR "127.0.0.1"
+#define SERVER_DEFAULT_ADDR "45.32.82.181"
+//#define SERVER_DEFAULT_ADDR "127.0.0.1"
 #define CLIENT_DUMP 0
 #define STDIN 0
 
