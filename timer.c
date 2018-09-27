@@ -20,14 +20,14 @@ static int __insert_to_timer_list(struct server *sv, struct cbtimer *timer)
 	struct list_head *pos = NULL;
 	struct cbtimer *tmp = NULL;
 
-	list_for_each_prev(pos, &sv->timers_list) {
+	list_for_each(pos, &sv->timers_list) {
 		tmp = list_entry(pos, struct cbtimer, list);
 
-		if(timer->timeout > tmp->timeout) {
+		if(timer->timeout <= tmp->timeout) {
 			break;
 		}
 	}
-	list_add_tail(&timer->list, &sv->timers_list);
+	list_add_tail(&timer->list, pos);
 	return 0;
 }
 
