@@ -147,7 +147,6 @@ int get_user_by_name(struct server *sv, const char *username, struct user **usr)
 		(*usr)->timer.handler = user_memory_free_handler;
 		(*usr)->timer.arg = (void *)sv;
 		add_timer(sv, &(*usr)->timer, SERVER_USER_UNUSED_TIMEOUT);
-		mod_timer(sv, &(*usr)->timer, 60);
 		user_get(sv, *usr); /*cache*/
 
 		/*register token*/
