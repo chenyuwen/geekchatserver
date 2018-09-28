@@ -29,8 +29,8 @@ int invalid_token_to_mysql(struct server *sv, struct user *usr)
 	int ret = 0;
 	char query[200];
 
-	snprintf(query, sizeof(query),"update users set token = '%s', token_valid = '1'" \
-		" where username = '%s'", "", usr->username);
+	snprintf(query, sizeof(query),"update users set token_valid = '0'" \
+		" where username = '%s'", usr->username);
 	if(sv->dump) mlog("%s\n", query);
 	ret = mysql_real_query_affected(config, query);
 	if(ret < 0) {
