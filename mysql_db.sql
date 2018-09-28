@@ -43,11 +43,11 @@ CREATE TABLE IF NOT EXISTS messages (
     UNIQUE KEY `message_uni` (`uuid`)
 ) DEFAULT CHARSET=utf8;
 ALTER TABLE geekchat.messages AUTO_INCREMENT = 1;
-INSERT INTO geekchat.messages(uuid, from_user, to_user, message) VALUES ("1", "zhangsan", "zhangsan", "Hi, zhangsan.");
-INSERT INTO geekchat.messages(uuid, from_user, to_user, message) VALUES ("2", "lisi", "root", "Hi, root.");
-INSERT INTO geekchat.messages(uuid, from_user, to_user, message) VALUES ("3", "liming", "zhangsan", "Hi, zhangsan.");
-INSERT INTO geekchat.messages(uuid, from_user, to_user, message) VALUES ("4", "zhangsan", "zhangsan", "Hi, zhangsan");
-INSERT INTO geekchat.messages(uuid, from_user, to_user, message) VALUES ("5", "liming", "lisi", "Hi, lisi");
+INSERT INTO geekchat.messages(uuid, from_user, to_user, message) VALUES ("8FBE5280E892C0DEECB1E9795769B89A", "zhangsan", "zhangsan", "Hi, zhangsan.");
+INSERT INTO geekchat.messages(uuid, from_user, to_user, message) VALUES ("C723765A8E89BBE7F50D351891036897", "lisi", "root", "Hi, root.");
+INSERT INTO geekchat.messages(uuid, from_user, to_user, message) VALUES ("47941EF88FC11655F6BB4A14D73923C5", "liming", "zhangsan", "Hi, zhangsan.");
+INSERT INTO geekchat.messages(uuid, from_user, to_user, message) VALUES ("17525C08363E8D3835588B269F10B3D8", "zhangsan", "zhangsan", "Hi, zhangsan");
+INSERT INTO geekchat.messages(uuid, from_user, to_user, message) VALUES ("0D61B083790D0C2AAED71E6DE5B9D7B9", "liming", "lisi", "Hi, lisi");
 
 CREATE user geekchat@localhost IDENTIFIED BY '1234';
 GRANT ALL ON geekchat.* TO 'geekchat'@'localhost';
