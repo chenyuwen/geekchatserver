@@ -18,7 +18,7 @@ int get_friends_by_user_from_mysql(struct server *sv, struct user *usr)
 	if(sv->dump) mlog("%s\n", query);
 	ret = mysql_real_query_result(config, query, &result);
 	if(ret < 0 || result == NULL) {
-		mlog("mysql_query: %s\n", mysql_error(config->mysql));
+		mlog("mysql_query: %s\n", mysql_err_str(config));
 		return ret;
 	}
 
@@ -82,7 +82,7 @@ int insert_friend_to_mysql(struct server *sv, struct user *usr, struct user *fri
 	if(sv->dump) mlog("%s\n", query);
 	ret = mysql_real_query_affected(config, query);
 	if(ret < 0) {
-		mlog("mysql_query: %s\n", mysql_error(config->mysql));
+		mlog("mysql_query: %s\n", mysql_err_str(config));
 		return ret;
 	}
 

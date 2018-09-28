@@ -4,12 +4,17 @@
 struct server;
 
 struct mysql_config {
-	MYSQL *mysql;
+	MYSQL mysql;
 	unsigned char *serverip;
 	unsigned char *username;
 	unsigned char *password;
 	unsigned char *database_name;
 };
+
+static inline const char *mysql_err_str(struct mysql_config *config)
+{
+	return mysql_error(&config->mysql);
+}
 
 int mysql_test_connection(struct server *sv);
 int init_mysql(struct server *sv);

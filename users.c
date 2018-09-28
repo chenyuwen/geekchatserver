@@ -71,7 +71,7 @@ int get_user_by_name_from_mysql(struct server *sv, const char *username, struct 
 	if(sv->dump) mlog("%s\n", query);
 	ret = mysql_real_query_result(config, query, &result);
 	if(ret < 0 || result == NULL) {
-		mlog("mysql_query: %s %d\n", mysql_error(config->mysql));
+		mlog("mysql_query: %s %d\n", mysql_err_str(config));
 		return ret;
 	}
 

@@ -34,7 +34,7 @@ int invalid_token_to_mysql(struct server *sv, struct user *usr)
 	if(sv->dump) mlog("%s\n", query);
 	ret = mysql_real_query_affected(config, query);
 	if(ret < 0) {
-		mlog("mysql_query: %s\n", mysql_error(config->mysql));
+		mlog("mysql_query: %s\n", mysql_err_str(config));
 		return ret;
 	}
 

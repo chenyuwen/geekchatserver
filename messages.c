@@ -44,8 +44,8 @@ int get_message_from_mysql(struct server *sv, struct user *to_usr, MYSQL_RES **r
 	if(sv->dump) mlog("%s\n", query);
 	ret = mysql_real_query_result(config, query, &tmp);
 	if(ret < 0 || tmp == NULL) {
-		mlog("mysql_query: %s\n", mysql_error(config->mysql));
-		return -mysql_errno(config->mysql);
+		mlog("mysql_query: %s\n", mysql_err_str(config));
+		return ret;
 	}
 
 	if(mysql_num_rows(tmp) <= 0) {
