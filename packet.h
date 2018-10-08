@@ -45,7 +45,7 @@ struct method {
 #define RAW_PACKET_BUFFER_MAX (SERVER_MAX_PACKETS - sizeof(struct raw_packet_head))
 
 int sizeof_raw_packet(struct raw_packet *packet);
-struct raw_packet *malloc_raw_packet(struct server *sv, struct client *ct);
+struct raw_packet *alloc_raw_packet(struct server *sv, struct client *ct);
 int free_raw_packet(struct server *sv, struct client *ct,
 	struct raw_packet *packet);
 int respond_raw_packet(struct server *sv, struct client *ct,

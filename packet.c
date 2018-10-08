@@ -31,7 +31,7 @@ int build_simplify_json(json_t *json, const char *method, int err)
 int respond_method_not_found(struct server *sv, struct client *ct, json_t *json)
 {
 	json_t *rsp_json = json_object();
-	struct raw_packet *packet = malloc_raw_packet(sv, ct);
+	struct raw_packet *packet = alloc_raw_packet(sv, ct);
 
 	build_simplify_json(rsp_json, "null", -SERR_NOT_METHOD);
 	json_to_raw_packet(rsp_json, PACKET_TYPE_UNENCRY, packet);
@@ -103,7 +103,7 @@ int sizeof_raw_packet(struct raw_packet *packet)
 	return sizeof(struct raw_packet_head) + packet->head.packet_len;
 }
 
-struct raw_packet *malloc_raw_packet(struct server *sv,
+struct raw_packet *alloc_raw_packet(struct server *sv,
 	struct client *ct)
 {
 	if(sv->dump) memset(ct->respond, 0, sizeof(ct->respond));

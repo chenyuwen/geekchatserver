@@ -21,7 +21,7 @@ int method_com_user_password_request(struct server *sv, struct client *ct, json_
 {
 	json_error_t json_err;
 	json_t *rsp_json = json_object();
-	struct raw_packet *packet = malloc_raw_packet(sv, ct);
+	struct raw_packet *packet = alloc_raw_packet(sv, ct);
 
 	json_object_set_new(rsp_json, "method", json_string("com.user.password.respond"));
 	json_object_set_new(rsp_json, "status", json_true());

@@ -50,7 +50,7 @@ int method_com_logout_bytoken_request(struct server *sv, struct client *ct, json
 {
 	json_error_t json_err;
 	json_t *rsp_json = json_object();
-	struct raw_packet *packet = malloc_raw_packet(sv, ct);
+	struct raw_packet *packet = alloc_raw_packet(sv, ct);
 	const char *token = NULL;
 	struct user *usr = NULL;
 	int ret = 0, res_ret = SERR_SUCCESS;

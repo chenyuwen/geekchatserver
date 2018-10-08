@@ -11,7 +11,7 @@ int send_message_to(struct server *sv, struct user *from, struct user *to,
 	const char *uuid, const char *message)
 {
 	json_t *rsp_json = json_object();
-	struct raw_packet *packet = malloc_raw_packet(sv, to->client);
+	struct raw_packet *packet = alloc_raw_packet(sv, to->client);
 	int ret = 0;
 
 	json_object_set_new(rsp_json, "method", json_string("com.message.recv.request"));

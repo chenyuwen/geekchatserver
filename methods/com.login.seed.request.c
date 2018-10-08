@@ -39,7 +39,7 @@ int method_com_login_seed_request(struct server *sv, struct client *ct, json_t *
 {
 	json_error_t json_err;
 	json_t *rsp_json = json_object();
-	struct raw_packet *packet = malloc_raw_packet(sv, ct);
+	struct raw_packet *packet = alloc_raw_packet(sv, ct);
 	struct user *usr = NULL;
 	const char *username = NULL;
 	char *token;

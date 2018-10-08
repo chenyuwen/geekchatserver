@@ -28,7 +28,7 @@ int method_com_friends_list_request(struct server *sv, struct client *ct, json_t
 {
 	json_error_t json_err;
 	json_t *rsp_json = json_object(), *array = json_array();
-	struct raw_packet *packet = malloc_raw_packet(sv, ct);
+	struct raw_packet *packet = alloc_raw_packet(sv, ct);
 	const char *token, *tmp;
 	struct user *usr;
 	struct friends *friends = NULL;

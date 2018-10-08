@@ -50,7 +50,7 @@ int method_com_register_request(struct server *sv, struct client *ct, json_t *js
 	json_error_t json_err;
 	json_t *rsp_json = json_object();
 	const char *username = NULL, *password = NULL;
-	struct raw_packet *packet = malloc_raw_packet(sv, ct);
+	struct raw_packet *packet = alloc_raw_packet(sv, ct);
 	int ret = 0, res_ret = 0;
 
 	username = json_string_value(json_object_get(json, "username"));
