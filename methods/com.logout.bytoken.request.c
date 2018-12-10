@@ -21,7 +21,7 @@
 #include "../tokens.h"
 #include "methods.h"
 
-#define THIS_METHOD_RESPOND_NAME "com.logout.respond"
+#define THIS_METHOD_RESPOND_NAME "com.logout.bytoken.respond"
 
 int invalid_token_to_mysql(struct server *sv, struct user *usr)
 {
