@@ -1,5 +1,12 @@
-server
-client
+gkserver
+gkclient
 cscope.out
 *.o
 *.a
+*.swp
+
+# Cmake files
+CMakeCache.txt
+CMakeFiles
+Makefile
+cmake_install.cmake
